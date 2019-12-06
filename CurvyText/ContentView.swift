@@ -62,14 +62,28 @@ struct ControlPoint: View {
 
     @Binding var position: CGPoint
 
+    @State var dragStart: CGPoint?  // Drag based on initial touch-point, not center
+
     var body: some View {
         Rectangle()
-            .frame(width: size.width, height: size.height)
+            .frame(width: size.width, height: size.height)  // Size of fill
+            .frame(width: size.width * 3, height: size.height * 3) // Increase hit area
+            .contentShape(Rectangle()) // Make whole area hittable
             .position(position)
             .gesture(
                 DragGesture().onChanged {
-                    self.position = $0.location
-            })
+                    if self.dragStart == nil {
+                        self.dragStart = self.position
+                    }
+
+                    if let dragStart = self.dragStart {
+                        self.position = dragStart + $0.translation
+                    }
+                }
+                .onEnded { _ in
+                    self.dragStart = nil
+                }
+        )
     }
 }
 
@@ -221,5 +235,10 @@ extension CGPoint {
         let dx = x - other.x
         let dy = y - other.y
         return hypot(dx, dy)
+    }
+
+    static func + (lhs: CGPoint, rhs: CGSize) -> CGPoint {
+        return CGPoint(x: lhs.x + rhs.width,
+                       y: lhs.y + rhs.height)
     }
 }
