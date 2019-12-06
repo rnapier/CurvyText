@@ -57,18 +57,14 @@ struct ContentView_Previews: PreviewProvider {
     }
 }
 
-struct ControlPoint: View {
-    let size = CGSize(width: 13, height: 13)
-
+struct Draggable<Content: View>: View {
+    let content: Content
     @Binding var position: CGPoint
 
-    @State var dragStart: CGPoint?  // Drag based on initial touch-point, not center
+    @State private var dragStart: CGPoint?  // Drag based on initial touch-point, not center
 
     var body: some View {
-        Rectangle()
-            .frame(width: size.width, height: size.height)  // Size of fill
-            .frame(width: size.width * 3, height: size.height * 3) // Increase hit area
-            .contentShape(Rectangle()) // Make whole area hittable
+        content
             .position(position)
             .gesture(
                 DragGesture().onChanged {
@@ -84,6 +80,26 @@ struct ControlPoint: View {
                     self.dragStart = nil
                 }
         )
+    }
+}
+
+extension View {
+    func draggable(position: Binding<CGPoint>) -> some View {
+        Draggable(content: self, position: position)
+    }
+}
+
+struct ControlPoint: View {
+    let size = CGSize(width: 13, height: 13)
+
+    @Binding var position: CGPoint
+
+    var body: some View {
+        Rectangle()
+            .frame(width: size.width, height: size.height)  // Size of fill
+            .frame(width: size.width * 3, height: size.height * 3) // Increase hit area
+            .contentShape(Rectangle()) // Make whole area hittable
+            .draggable(position: $position)
     }
 }
 
