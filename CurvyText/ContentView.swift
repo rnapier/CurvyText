@@ -14,7 +14,7 @@ struct ContentView: View {
     @State var P2 = CGPoint(x: 400, y: 700)
     @State var P3 = CGPoint(x: 650, y: 500)
 
-    let text: NSAttributedString = {
+    @State var text: NSAttributedString = {
         let string = NSString("You can display text along a curve, with bold, color, and big text.")
 
         let s = NSMutableAttributedString(string: string as String,
@@ -34,7 +34,7 @@ struct ContentView: View {
             }
             .stroke(Color.blue, lineWidth: 2)
 
-            PathText(text: text, P0: $P0, P1: $P1, P2: $P2, P3: $P3) // FIXME
+            PathText(text: $text, P0: $P0, P1: $P1, P2: $P2, P3: $P3)
                 .border(Color.green)
 
             ControlPoint(position: $P0)
@@ -76,17 +76,18 @@ struct ControlPoint: View {
 }
 
 struct PathText: UIViewRepresentable {
-    let text: NSAttributedString
+    @Binding var text: NSAttributedString
     @Binding var P0: CGPoint
     @Binding var P1: CGPoint
     @Binding var P2: CGPoint
     @Binding var P3: CGPoint
 
     func makeUIView(context: UIViewRepresentableContext<PathText>) -> PathTextView {
-        PathTextView(text: text)
+        PathTextView()
     }
 
     func updateUIView(_ uiView: PathText.UIViewType, context: UIViewRepresentableContext<PathText>) {
+        uiView.text = text
         uiView.P0 = P0
         uiView.P1 = P1
         uiView.P2 = P2
@@ -99,28 +100,33 @@ class PathTextView: UIView {
 
     private let layoutManager = NSLayoutManager()
     private let textContainer = NSTextContainer()
-    private let textStorage: NSTextStorage
-    private let locations: [CGPoint]
-    private let lineFragmentOrigin: CGPoint
+    private let textStorage = NSTextStorage()
+
+    private var locations: [CGPoint] = []
+    private var lineFragmentOrigin = CGPoint.zero
 
     var P0 = CGPoint.zero
     var P1 = CGPoint.zero
     var P2 = CGPoint.zero
     var P3 = CGPoint.zero
 
-    init(text: NSAttributedString) {
-        self.textStorage = NSTextStorage(attributedString: text)
+    var text: NSAttributedString {
+        get { textStorage }
+        set {
+            textStorage.setAttributedString(newValue)
+            locations = (0..<layoutManager.numberOfGlyphs).map { [layoutManager] glyphIndex in
+                layoutManager.location(forGlyphAt: glyphIndex)
+            }
 
+            lineFragmentOrigin = layoutManager
+                .lineFragmentRect(forGlyphAt: 0, effectiveRange: nil)
+                .origin
+        }
+    }
+
+    init() {
         layoutManager.addTextContainer(textContainer)
         textStorage.addLayoutManager(layoutManager)
-
-        self.locations = (0..<layoutManager.numberOfGlyphs).map { [layoutManager] glyphIndex in
-            layoutManager.location(forGlyphAt: glyphIndex)
-        }
-
-        self.lineFragmentOrigin = layoutManager
-            .lineFragmentRect(forGlyphAt: 0, effectiveRange: nil)
-            .origin
 
         super.init(frame: .zero)
 
@@ -137,8 +143,10 @@ class PathTextView: UIView {
         var lastGlyphPoint = P0
         var lastX: CGFloat = 0.0
 
+        // Compute location for each glyph, transform the context, and then draw
         for (index, location) in locations.enumerated() {
             context.saveGState()
+
             let distance = location.x - lastX
             offset = getOffset(atDistance: distance, from: lastGlyphPoint, andOffset: offset)
 
