@@ -35,7 +35,6 @@ struct ContentView: View {
             .stroke(Color.blue, lineWidth: 2)
 
             PathText(text: text, P0: P0, P1: P1, P2: P2, P3: P3)
-                .border(Color.green)
 
             ControlPoint(position: $P0)
                 .foregroundColor(.green)
@@ -100,13 +99,6 @@ struct PathText: UIViewRepresentable {
  */
 class PathTextView: UIView {
 
-    private let layoutManager = NSLayoutManager()
-    private let textContainer = NSTextContainer()
-    private let textStorage = NSTextStorage()
-
-    private var locations: [CGPoint] = []
-    private var lineFragmentOrigin = CGPoint.zero
-
     var P0 = CGPoint.zero
     var P1 = CGPoint.zero
     var P2 = CGPoint.zero
@@ -126,12 +118,15 @@ class PathTextView: UIView {
         }
     }
 
+    private let layoutManager = NSLayoutManager()
+    private let textStorage = NSTextStorage()
+
+    private var locations: [CGPoint] = []
+    private var lineFragmentOrigin = CGPoint.zero
+
     init() {
-        layoutManager.addTextContainer(textContainer)
         textStorage.addLayoutManager(layoutManager)
-
         super.init(frame: .zero)
-
         backgroundColor = .clear
     }
 
@@ -150,7 +145,7 @@ class PathTextView: UIView {
             context.saveGState()
 
             let distance = location.x - lastX
-            offset = getOffset(atDistance: distance, from: lastGlyphPoint, andOffset: offset)
+            offset = getOffset(atDistance: distance, from: lastGlyphPoint, offset: offset)
 
             let glyphPoint = getPoint(forOffset: offset)
             let angle = getAngle(forOffset: offset)
@@ -173,32 +168,15 @@ class PathTextView: UIView {
         }
     }
 
-    func Bezier(_ t: CGFloat, _ P0: CGFloat, _ P1: CGFloat, _ P2: CGFloat, _ P3: CGFloat) -> CGFloat {
-      return
-               (1-t)*(1-t)*(1-t)         * P0
-         + 3 *       (1-t)*(1-t) *     t * P1
-         + 3 *             (1-t) *   t*t * P2
-         +                         t*t*t * P3
-    }
-
-    func BezierPrime(_ t: CGFloat, _ P0: CGFloat, _ P1: CGFloat, _ P2: CGFloat, _ P3: CGFloat) -> CGFloat {
-      return 0
-        -  3 * (1-t)*(1-t) * P0
-        + (3 * (1-t)*(1-t) * P1) - (6 * t * (1-t) * P1)
-        - (3 *         t*t * P2) + (6 * t * (1-t) * P2)
-        +  3 * t*t * P3
-    }
-
-    private func Distance(_ a: CGPoint, _ b: CGPoint) -> CGFloat {
-        let dx = a.x - b.x
-        let dy = a.y - b.y
-        return hypot(dx, dy)
-    }
-
     func getPoint(forOffset t: CGFloat) -> CGPoint {
-        let x = Bezier(t, P0.x, P1.x, P2.x, P3.x)
-        let y = Bezier(t, P0.y, P1.y, P2.y, P3.y)
-        return CGPoint(x: CGFloat(x), y: CGFloat(y))
+        CGPoint(x: bezier(t, P0.x, P1.x, P2.x, P3.x),
+                y: bezier(t, P0.y, P1.y, P2.y, P3.y))
+    }
+
+    func getAngle(forOffset t: CGFloat) -> CGFloat {
+        let dx = bezierPrime(t, P0.x, P1.x, P2.x, P3.x)
+        let dy = bezierPrime(t, P0.y, P1.y, P2.y, P3.y)
+        return atan2(dy, dx)
     }
 
     // Simplistic routine to find the offset along Bezier that is
@@ -209,21 +187,39 @@ class PathTextView: UIView {
     // of guesses, but this is tricky since if we go too far out, the
     // curve might loop back on leading to incorrect results. Tuning
     // kStep is good start.
-    func getOffset(atDistance aDistance: CGFloat, from aPoint: CGPoint, andOffset anOffset: CGFloat) -> CGFloat {
+    func getOffset(atDistance distance: CGFloat, from point: CGPoint, offset: CGFloat) -> CGFloat {
         let kStep: CGFloat = 0.001 // 0.0001 - 0.001 work well
         var newDistance: CGFloat = 0
-        var newOffset = anOffset + kStep
-        while newDistance <= aDistance && newOffset < 1.0 {
+        var newOffset = offset + kStep
+        while newDistance <= distance && newOffset < 1.0 {
             newOffset += kStep
-            newDistance = Distance(aPoint, getPoint(forOffset: newOffset))
+            newDistance = point.distance(to: getPoint(forOffset: newOffset))
         }
         return newOffset
     }
-
-    func getAngle(forOffset t: CGFloat) -> CGFloat {
-        let dx = BezierPrime(t, P0.x, P1.x, P2.x, P3.x)
-        let dy = BezierPrime(t, P0.y, P1.y, P2.y, P3.y)
-        return atan2(dy, dx)
-    }
 }
 
+// The Bezier function at t
+func bezier(_ t: CGFloat, _ P0: CGFloat, _ P1: CGFloat, _ P2: CGFloat, _ P3: CGFloat) -> CGFloat {
+           (1-t)*(1-t)*(1-t)         * P0
+     + 3 *       (1-t)*(1-t) *     t * P1
+     + 3 *             (1-t) *   t*t * P2
+     +                         t*t*t * P3
+}
+
+// The slope of the Bezier function at t
+func bezierPrime(_ t: CGFloat, _ P0: CGFloat, _ P1: CGFloat, _ P2: CGFloat, _ P3: CGFloat) -> CGFloat {
+       0
+    -  3 * (1-t)*(1-t) * P0
+    + (3 * (1-t)*(1-t) * P1) - (6 * t * (1-t) * P1)
+    - (3 *         t*t * P2) + (6 * t * (1-t) * P2)
+    +  3 * t*t * P3
+}
+
+extension CGPoint {
+    func distance(to other: CGPoint) -> CGFloat {
+        let dx = x - other.x
+        let dy = y - other.y
+        return hypot(dx, dy)
+    }
+}
