@@ -14,7 +14,7 @@ struct ContentView: View {
     @State var P2 = CGPoint(x: 400, y: 700)
     @State var P3 = CGPoint(x: 650, y: 500)
 
-    @State var text: NSAttributedString = {
+    let text: NSAttributedString = {
         let string = NSString("You can display text along a curve, with bold, color, and big text.")
 
         let s = NSMutableAttributedString(string: string as String,
@@ -34,7 +34,7 @@ struct ContentView: View {
             }
             .stroke(Color.blue, lineWidth: 2)
 
-            PathText(text: $text, P0: $P0, P1: $P1, P2: $P2, P3: $P3)
+            PathText(text: text, P0: P0, P1: P1, P2: P2, P3: P3)
                 .border(Color.green)
 
             ControlPoint(position: $P0)
@@ -48,7 +48,6 @@ struct ContentView: View {
 
             ControlPoint(position: $P3)
                 .foregroundColor(.red)
-
         }
     }
 }
@@ -60,13 +59,13 @@ struct ContentView_Previews: PreviewProvider {
 }
 
 struct ControlPoint: View {
-    let controlPointSize: CGFloat = 13
+    let size = CGSize(width: 13, height: 13)
 
     @Binding var position: CGPoint
 
     var body: some View {
         Rectangle()
-            .frame(width: controlPointSize, height: controlPointSize)
+            .frame(width: size.width, height: size.height)
             .position(position)
             .gesture(
                 DragGesture().onChanged {
@@ -76,11 +75,11 @@ struct ControlPoint: View {
 }
 
 struct PathText: UIViewRepresentable {
-    @Binding var text: NSAttributedString
-    @Binding var P0: CGPoint
-    @Binding var P1: CGPoint
-    @Binding var P2: CGPoint
-    @Binding var P3: CGPoint
+    var text: NSAttributedString
+    var P0: CGPoint
+    var P1: CGPoint
+    var P2: CGPoint
+    var P3: CGPoint
 
     func makeUIView(context: UIViewRepresentableContext<PathText>) -> PathTextView {
         PathTextView()
@@ -96,6 +95,9 @@ struct PathText: UIViewRepresentable {
     }
 }
 
+/*
+ Draws attributed text along a cubic Bezier path defined by P0, P1, P2, and P3
+ */
 class PathTextView: UIView {
 
     private let layoutManager = NSLayoutManager()
