@@ -8,6 +8,16 @@
 
 import SwiftUI
 
+// Terminology:
+//     fraction: Value from 0 to 1, where 0 is the starting point, and 1 is the final point. Matches "t"
+//               in the Bezier path. Note that fraction 0.5 does *not* mean "half-way through the curve."
+//
+//     linearDistance: 1-D distance along the path
+//
+//     location: a linearDistance from the starting point
+//
+//     distance: 2-D Eucledian distance
+
 @available(iOS 13.0, *)
 public struct PathText: UIViewRepresentable {
     public var text: NSAttributedString
@@ -72,7 +82,7 @@ public class PathTextView: UIView {
 
     public override func draw(_ rect: CGRect) {
 
-        let tangents = path.tangents(at: locations.map { $0.x })
+        let tangents = path.tangents(atLocations: locations.map { $0.x })
 
         let sections = path.sections()
 
@@ -169,13 +179,13 @@ struct PathText_Previews: PreviewProvider {
 
     static func LinesView() -> some View {
         let P0 = CGPoint(x: 50, y: 500)
-        let P2 = CGPoint(x: 400, y: 700)
-        let P3 = CGPoint(x: 650, y: 500)
+        let P1 = CGPoint(x: 400, y: 700)
+        let P2 = CGPoint(x: 650, y: 500)
 
         let path = Path() {
             $0.move(to: P0)
+            $0.addLine(to: P1)
             $0.addLine(to: P2)
-            $0.addLine(to: P3)
         }
 
         return PathText(text: text, path: path)
@@ -185,7 +195,7 @@ struct PathText_Previews: PreviewProvider {
         Group {
             CurveView()
             LineView()
-            LinesView()
+//            LinesView()
         }
     }
 }
@@ -194,12 +204,12 @@ protocol PathSection {
     var start: CGPoint { get }
     var end: CGPoint { get }
     func tangent(atOffset offset: CGFloat) -> PathTangent
-    func nextTangent(distance: CGFloat, after: PathTangent) -> NextTangent
+    func nextTangent(linearDistance: CGFloat, after: PathTangent) -> NextTangent
 }
 
 extension PathSection {
     // Default impl
-        func nextTangent(distance: CGFloat, after lastTangent: PathTangent) -> NextTangent {
+        func nextTangent(linearDistance: CGFloat, after lastTangent: PathTangent) -> NextTangent {
             // Simplistic routine to find the offset along Bezier that is
             // aDistance away from aPoint. anOffset is the offset used to
             // generate aPoint, and saves us the trouble of recalculating it
@@ -215,7 +225,7 @@ extension PathSection {
                 let kStep: CGFloat = 0.001 // 0.0001 - 0.001 work well
                 var newDistance: CGFloat = 0
                 var newOffset = offset + kStep
-                while newDistance <= distance && newOffset < 1.0 {
+                while newDistance <= linearDistance && newOffset < 1.0 {
                     newOffset += kStep
                     newDistance = point.distance(to: tangent(atOffset: newOffset).point)     // FIXME: Inefficient
                 }
@@ -229,7 +239,7 @@ extension PathSection {
         }
 }
 
-struct PathTangent {
+struct PathTangent: Equatable {
     var offset: CGFloat
     var point: CGPoint
     var angle: CGFloat
@@ -279,7 +289,7 @@ extension Path {
         return sections
     }
 
-    func tangents(at offsets: [CGFloat]) -> [PathTangent] {
+    func tangents(atLocations locations: [CGFloat]) -> [PathTangent] {
         var sections = self.sections().reversed()
 
         guard let currentSection = sections.last else { return [] }
@@ -290,10 +300,10 @@ extension Path {
         var lastLocation: CGFloat = 0.0
 
         // Compute location for each glyph, transform the context, and then draw
-        for location in offsets {
-            let distance = location - lastLocation
+        for location in locations {
+            let linearDistance = location - lastLocation
 
-            switch currentSection.nextTangent(distance: distance, after: lastTangent) {
+            switch currentSection.nextTangent(linearDistance: linearDistance, after: lastTangent) {
             case .found(let tangent):
                 tangents.append(tangent)
                 lastTangent = tangent
