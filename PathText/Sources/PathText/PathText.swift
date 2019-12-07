@@ -9,8 +9,8 @@
 import SwiftUI
 
 // Terminology:
-//     fraction: Value from 0 to 1, where 0 is the starting point, and 1 is the final point. Matches "t"
-//               in the Bezier path. Note that fraction 0.5 does *not* mean "half-way through the curve."
+//     t: Value from 0 to 1, where 0 is the starting point, and 1 is the final point.
+//        Note that t=0.5 does *not* mean "half-way through the curve."
 //
 //     linearDistance: 1-D distance along the path
 //
@@ -203,44 +203,45 @@ struct PathText_Previews: PreviewProvider {
 protocol PathSection {
     var start: CGPoint { get }
     var end: CGPoint { get }
-    func tangent(atOffset offset: CGFloat) -> PathTangent
+    func getTangent(t: CGFloat) -> PathTangent
     func nextTangent(linearDistance: CGFloat, after: PathTangent) -> NextTangent
 }
 
 extension PathSection {
     // Default impl
-        func nextTangent(linearDistance: CGFloat, after lastTangent: PathTangent) -> NextTangent {
-            // Simplistic routine to find the offset along Bezier that is
-            // aDistance away from aPoint. anOffset is the offset used to
-            // generate aPoint, and saves us the trouble of recalculating it
-            // This routine just walks forward until it finds a point at least
-            // aDistance away. Good optimizations here would reduce the number
-            // of guesses, but this is tricky since if we go too far out, the
-            // curve might loop back on leading to incorrect results. Tuning
-            // kStep is good start.
-    //        func getOffset(atDistance distance: CGFloat, from point: CGPoint, offset: CGFloat) -> CGFloat {
-            let point = lastTangent.point
-            let offset = lastTangent.offset
+    func nextTangent(linearDistance: CGFloat, after lastTangent: PathTangent) -> NextTangent {
+        // Simplistic routine to find the t along Bezier that is
+        // a linear distance away from a previous tangent.
+        // This routine just walks forward, accumulating Euclidean approximations until it finds
+        // a point at least linearDistance away. Good optimizations here would reduce the number
+        // of guesses, but this is tricky since if we go too far out, the
+        // curve might loop back on leading to incorrect results. Tuning
+        // kStep is good start.
+        //        func getOffset(atDistance distance: CGFloat, from point: CGPoint, offset: CGFloat) -> CGFloat {
+        let point = lastTangent.point
+//        let t = lastTangent.t
 
-                let kStep: CGFloat = 0.001 // 0.0001 - 0.001 work well
-                var newDistance: CGFloat = 0
-                var newOffset = offset + kStep
-                while newDistance <= linearDistance && newOffset < 1.0 {
-                    newOffset += kStep
-                    newDistance = point.distance(to: tangent(atOffset: newOffset).point)     // FIXME: Inefficient
-                }
-
-            if newOffset >= 1.0 {
-                fatalError() // Implement
-    //            return .insufficient(remaining: <#T##CGFloat#>)
-            }
-
-            return .found(tangent(atOffset: newOffset))
+        let step: CGFloat = 0.001 // 0.0001 - 0.001 work well
+        var approximateLinearDistance: CGFloat = 0
+//        var nextT = t
+        var tangent = lastTangent
+        while approximateLinearDistance <= linearDistance && tangent.t < 1.0 {
+//            nextT += step
+            tangent = getTangent(t: tangent.t + step)
+            approximateLinearDistance = point.distance(to: tangent.point) // FIXME: Inefficient?
         }
+
+        if tangent.t >= 1.0 {
+            fatalError() // Implement
+            //            return .insufficient(remaining: <#T##CGFloat#>)
+        }
+
+        return .found(tangent)
+    }
 }
 
 struct PathTangent: Equatable {
-    var offset: CGFloat
+    var t: CGFloat
     var point: CGPoint
     var angle: CGFloat
 }
@@ -289,29 +290,36 @@ extension Path {
         return sections
     }
 
+    // Locations must be in ascending order
     func tangents(atLocations locations: [CGFloat]) -> [PathTangent] {
+        assert(locations == locations.sorted())
+
         var sections = self.sections().reversed()
 
         guard let currentSection = sections.last else { return [] }
 
         var tangents: [PathTangent] = []
 
-        var lastTangent = currentSection.tangent(atOffset: 0)
+        var lastTangent = currentSection.getTangent(t: 0)
         var lastLocation: CGFloat = 0.0
 
         // Compute location for each glyph, transform the context, and then draw
         for location in locations {
-            let linearDistance = location - lastLocation
+            if location == 0 {
+                tangents.append(currentSection.getTangent(t: 0))
+            } else {
+                let linearDistance = location - lastLocation
 
-            switch currentSection.nextTangent(linearDistance: linearDistance, after: lastTangent) {
-            case .found(let tangent):
-                tangents.append(tangent)
-                lastTangent = tangent
-                lastLocation = location
+                switch currentSection.nextTangent(linearDistance: linearDistance, after: lastTangent) {
+                case .found(let tangent):
+                    tangents.append(tangent)
+                    lastTangent = tangent
+                    lastLocation = location
 
 
-            case .insufficient(remaining: let remaining):
-                fatalError()    // Implement
+                case .insufficient(remaining: let remaining):
+                    fatalError()    // Implement
+                }
             }
         }
         return tangents
@@ -321,14 +329,14 @@ extension Path {
 struct PathLineSection: PathSection {
     let start, end: CGPoint
 
-    func tangent(atOffset offset: CGFloat) -> PathTangent {
+    func getTangent(t: CGFloat) -> PathTangent {
         let dx = end.x - start.x
         let dy = end.y - start.y
         
-        let x = start.x + dx * offset
-        let y = start.y + dy * offset
+        let x = start.x + dx * t
+        let y = start.y + dy * t
 
-        return PathTangent(offset: offset,
+        return PathTangent(t: t,
                            point: CGPoint(x: x, y: y),
                            angle: atan2(dy, dx))
     }
@@ -349,14 +357,14 @@ struct PathCurveSection: PathSection {
     var start: CGPoint { p0 }
     var end: CGPoint { p3 }
 
-    func tangent(atOffset offset: CGFloat) -> PathTangent {
-        let dx = bezierPrime(offset, p0.x, p1.x, p2.x, p3.x)
-        let dy = bezierPrime(offset, p0.y, p1.y, p2.y, p3.y)
+    func getTangent(t: CGFloat) -> PathTangent {
+        let dx = bezierPrime(t, p0.x, p1.x, p2.x, p3.x)
+        let dy = bezierPrime(t, p0.y, p1.y, p2.y, p3.y)
 
-        let x = bezier(offset, p0.x, p1.x, p2.x, p3.x)
-        let y = bezier(offset, p0.y, p1.y, p2.y, p3.y)
+        let x = bezier(t, p0.x, p1.x, p2.x, p3.x)
+        let y = bezier(t, p0.y, p1.y, p2.y, p3.y)
 
-        return PathTangent(offset: offset,
+        return PathTangent(t: t,
                            point: CGPoint(x: x, y: y),
                            angle: atan2(dy, dx))
     }
