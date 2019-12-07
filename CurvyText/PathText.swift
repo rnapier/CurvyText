@@ -126,7 +126,19 @@ extension CGPoint {
 }
 
 struct PathText_Previews: PreviewProvider {
-    static var previews: some View {
+    static let text: NSAttributedString = {
+        let string = NSString("You can display text along a curve, with bold, color, and big text.")
+
+        let s = NSMutableAttributedString(string: string as String,
+                                          attributes: [.font: UIFont.systemFont(ofSize: 16)])
+
+        s.addAttributes([.font: UIFont.boldSystemFont(ofSize: 16)], range: string.range(of: "bold"))
+        s.addAttributes([.foregroundColor: UIColor.red], range: string.range(of: "color"))
+        s.addAttributes([.font: UIFont.systemFont(ofSize: 32)], range: string.range(of: "big text"))
+        return s
+    }()
+
+    static func CurveView() -> some View {
         let P0 = CGPoint(x: 50, y: 500)
         let P1 = CGPoint(x: 300, y: 300)
         let P2 = CGPoint(x: 400, y: 700)
@@ -137,19 +149,41 @@ struct PathText_Previews: PreviewProvider {
             $0.addCurve(to: P3, control1: P1, control2: P2)
         }
 
-        let text: NSAttributedString = {
-            let string = NSString("You can display text along a curve, with bold, color, and big text.")
+        return PathText(text: text, path: path)
+    }
 
-            let s = NSMutableAttributedString(string: string as String,
-                                              attributes: [.font: UIFont.systemFont(ofSize: 16)])
+    static func LineView() -> some View {
+        let P0 = CGPoint(x: 50, y: 500)
+        let P1 = CGPoint(x: 650, y: 500)
 
-            s.addAttributes([.font: UIFont.boldSystemFont(ofSize: 16)], range: string.range(of: "bold"))
-            s.addAttributes([.foregroundColor: UIColor.red], range: string.range(of: "color"))
-            s.addAttributes([.font: UIFont.systemFont(ofSize: 32)], range: string.range(of: "big text"))
-            return s
-        }()
+        let path = Path() {
+            $0.move(to: P0)
+            $0.addLine(to: P1)
+        }
 
         return PathText(text: text, path: path)
+    }
+
+    static func LinesView() -> some View {
+        let P0 = CGPoint(x: 50, y: 500)
+        let P2 = CGPoint(x: 400, y: 700)
+        let P3 = CGPoint(x: 650, y: 500)
+
+        let path = Path() {
+            $0.move(to: P0)
+            $0.addLine(to: P2)
+            $0.addLine(to: P3)
+        }
+
+        return PathText(text: text, path: path)
+
+    }
+    static var previews: some View {
+        Group {
+            CurveView()
+            LineView()
+            LinesView()
+        }
     }
 }
 
