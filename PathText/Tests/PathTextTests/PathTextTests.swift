@@ -92,7 +92,6 @@ final class PathTextTests: XCTestCase {
 
         let tangents = path.tangents(atLocations: [0, 100, 200, 300, 400, 500, 600, 700])
 
-
         XCTAssertEqual(tangents, [
             PathTangent(t: 0, point: CGPoint(x: 0, y: 0), angle: 0),
             PathTangent(t: 0.12500000000000008, point: CGPoint(x: 100.00000000000007, y: 0), angle: 0),
@@ -105,6 +104,43 @@ final class PathTextTests: XCTestCase {
         ])
     }
 
+    func testLine() {
+
+        let P0 = CGPoint(x: 0, y: 0)
+        let P1 = CGPoint(x: 800, y: 800)
+
+        let path = Path() {
+            $0.move(to: P0)
+            $0.addLine(to: P1)
+        }
+
+        let sections = path.sections()
+
+        XCTAssertEqual(sections.count, 1)
+
+        guard let section = sections.first as? PathLineSection else {
+            XCTFail()
+            return
+        }
+
+        XCTAssertEqual(section.start, P0)
+        XCTAssertEqual(section.end, P1)
+
+        let tangents = path.tangents(atLocations: [0, 100, 200, 300, 400, 500, 600, 700])
+
+        let angle: CGFloat = atan(1)
+
+        XCTAssertEqual(tangents, [
+            PathTangent(t: 0.0, point: CGPoint(x: 0.0, y: 0.0), angle: angle),
+            PathTangent(t: 0.08900000000000007, point: CGPoint(x: 71.200000000000050, y: 71.200000000000050), angle: angle),
+            PathTangent(t: 0.17800000000000013, point: CGPoint(x: 142.40000000000010, y: 142.40000000000010), angle: angle),
+            PathTangent(t: 0.26700000000000020, point: CGPoint(x: 213.60000000000014, y: 213.60000000000014), angle: angle),
+            PathTangent(t: 0.35600000000000026, point: CGPoint(x: 284.80000000000020, y: 284.80000000000020), angle: angle),
+            PathTangent(t: 0.44500000000000034, point: CGPoint(x: 356.00000000000030, y: 356.00000000000030), angle: angle),
+            PathTangent(t: 0.53400000000000040, point: CGPoint(x: 427.20000000000030, y: 427.20000000000030), angle: angle),
+            PathTangent(t: 0.62300000000000040, point: CGPoint(x: 498.40000000000040, y: 498.40000000000040), angle: angle),
+        ])
+    }
     static var allTests = [
         ("testCurve", testCurve),
         ("testFlatLine", testFlatLine),
