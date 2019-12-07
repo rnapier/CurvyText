@@ -179,7 +179,7 @@ struct PathText_Previews: PreviewProvider {
 
     static func LinesView() -> some View {
         let P0 = CGPoint(x: 50, y: 500)
-        let P1 = CGPoint(x: 400, y: 700)
+        let P1 = CGPoint(x: 150, y: 200)
         let P2 = CGPoint(x: 650, y: 500)
 
         let path = Path() {
@@ -188,14 +188,38 @@ struct PathText_Previews: PreviewProvider {
             $0.addLine(to: P2)
         }
 
-        return PathText(text: text, path: path)
+        return ZStack {
+            PathText(text: text, path: path)
+            path.stroke(Color.blue, lineWidth: 2)
+        }
+    }
 
+
+    static func LineAndCurveView() -> some View {
+        let P0 = CGPoint(x: 50, y: 500)
+        let P1 = CGPoint(x: 150, y: 300)
+        let C1 = CGPoint(x: 300, y: 200)
+        let C2 = CGPoint(x: 300, y: 500)
+        let P3 = CGPoint(x: 650, y: 500)
+
+        let path = Path() {
+            $0.move(to: P0)
+            $0.addLine(to: P1)
+            $0.addCurve(to: P3, control1: C1, control2: C2)
+
+        }
+
+        return ZStack {
+            PathText(text: text, path: path)
+            path.stroke(Color.blue, lineWidth: 2)
+        }
     }
     static var previews: some View {
         Group {
             CurveView()
             LineView()
-//            LinesView()
+            LinesView()
+            LineAndCurveView()
         }
     }
 }
@@ -219,24 +243,20 @@ extension PathSection {
         // kStep is good start.
         //        func getOffset(atDistance distance: CGFloat, from point: CGPoint, offset: CGFloat) -> CGFloat {
         let point = lastTangent.point
-//        let t = lastTangent.t
 
         let step: CGFloat = 0.001 // 0.0001 - 0.001 work well
         var approximateLinearDistance: CGFloat = 0
-//        var nextT = t
         var tangent = lastTangent
-        while approximateLinearDistance <= linearDistance && tangent.t <= 1.0 {
-//            nextT += step
+        while approximateLinearDistance <= linearDistance && tangent.t < 1.0 {
             tangent = getTangent(t: tangent.t + step)
             approximateLinearDistance = point.distance(to: tangent.point) // FIXME: Inefficient?
         }
 
-        if tangent.t > 1.0 {
-            fatalError() // Implement
-            //            return .insufficient(remaining: <#T##CGFloat#>)
+        if tangent.t >= 1.0 {
+            return .insufficient(remainingLinearDistance: approximateLinearDistance)
+        } else {
+            return .found(tangent)
         }
-
-        return .found(tangent)
     }
 }
 
@@ -248,7 +268,7 @@ struct PathTangent: Equatable {
 
 enum NextTangent {
     case found(PathTangent)
-    case insufficient(remaining: CGFloat)
+    case insufficient(remainingLinearDistance: CGFloat)
 }
 
 @available(iOS 13.0, *)
@@ -294,34 +314,40 @@ extension Path {
     func tangents(atLocations locations: [CGFloat]) -> [PathTangent] {
         assert(locations == locations.sorted())
 
-        var sections = self.sections().reversed()
-
-        guard let currentSection = sections.last else { return [] }
-
         var tangents: [PathTangent] = []
 
-        var lastTangent = currentSection.getTangent(t: 0)
+        var sections = self.sections()[...]
+        var locations = locations[...]
+
         var lastLocation: CGFloat = 0.0
+        var lastTangent: PathTangent?
 
-        // Compute location for each glyph, transform the context, and then draw
-        for location in locations {
-            if location == 0 {
-                tangents.append(currentSection.getTangent(t: 0))
-            } else {
-                let linearDistance = location - lastLocation
+        while let location = locations.first, let section = sections.first  {
+            let currentTangent = lastTangent ?? section.getTangent(t: 0)
 
-                switch currentSection.nextTangent(linearDistance: linearDistance, after: lastTangent) {
-                case .found(let tangent):
-                    tangents.append(tangent)
-                    lastTangent = tangent
-                    lastLocation = location
+            guard location != lastLocation else {
+                tangents.append(currentTangent)
+                locations = locations.dropFirst()
+                continue
+            }
 
+            let linearDistance = location - lastLocation
 
-                case .insufficient(remaining: let remaining):
-                    fatalError()    // Implement
-                }
+            switch section.nextTangent(linearDistance: linearDistance,
+                                       after: currentTangent) {
+            case .found(let tangent):
+                tangents.append(tangent)
+                lastTangent = tangent
+                lastLocation = location
+                locations = locations.dropFirst()
+
+            case .insufficient(remainingLinearDistance: _):
+                lastTangent = nil
+                lastLocation = location
+                sections = sections.dropFirst()
             }
         }
+
         return tangents
     }
 }
@@ -340,9 +366,6 @@ struct PathLineSection: PathSection {
                            point: CGPoint(x: x, y: y),
                            angle: atan2(dy, dx))
     }
-
-
-
 }
 
 //struct PathQuadCurveSection: PathSection {
