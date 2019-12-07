@@ -43,7 +43,6 @@ final class PathTextTests: XCTestCase {
         XCTAssertEqual(section.p3, P3)
 
         let tangents = path.tangents(atLocations: [0, 100, 200, 300, 400, 500, 600])
-        print(tangents)
         XCTAssertEqual(tangents, [
             PathTangent(t: 0,
                         point: P0,
@@ -69,7 +68,45 @@ final class PathTextTests: XCTestCase {
         ])
     }
 
+    func testFlatLine() {
+
+        let P0 = CGPoint(x: 0, y: 0)
+        let P1 = CGPoint(x: 800, y: 0)
+
+        let path = Path() {
+            $0.move(to: P0)
+            $0.addLine(to: P1)
+        }
+
+        let sections = path.sections()
+
+        XCTAssertEqual(sections.count, 1)
+
+        guard let section = sections.first as? PathLineSection else {
+            XCTFail()
+            return
+        }
+
+        XCTAssertEqual(section.start, P0)
+        XCTAssertEqual(section.end, P1)
+
+        let tangents = path.tangents(atLocations: [0, 100, 200, 300, 400, 500, 600, 700])
+
+
+        XCTAssertEqual(tangents, [
+            PathTangent(t: 0, point: CGPoint(x: 0, y: 0), angle: 0),
+            PathTangent(t: 0.12500000000000008, point: CGPoint(x: 100.00000000000007, y: 0), angle: 0),
+            PathTangent(t: 0.25000000000000017, point: CGPoint(x: 200.00000000000014, y: 0), angle: 0),
+            PathTangent(t: 0.3750000000000003, point: CGPoint(x: 300.0000000000002, y: 0), angle: 0),
+            PathTangent(t: 0.5000000000000003, point: CGPoint(x: 400.0000000000003, y: 0), angle: 0),
+            PathTangent(t: 0.6250000000000004, point: CGPoint(x: 500.00000000000034, y: 0), angle: 0),
+            PathTangent(t: 0.7500000000000006, point: CGPoint(x: 600.0000000000005, y: 0), angle: 0),
+            PathTangent(t: 0.8750000000000007, point: CGPoint(x: 700.0000000000006, y: 0), angle: 0),
+        ])
+    }
+
     static var allTests = [
         ("testCurve", testCurve),
+        ("testFlatLine", testFlatLine),
     ]
 }

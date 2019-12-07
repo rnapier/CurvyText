@@ -225,13 +225,13 @@ extension PathSection {
         var approximateLinearDistance: CGFloat = 0
 //        var nextT = t
         var tangent = lastTangent
-        while approximateLinearDistance <= linearDistance && tangent.t < 1.0 {
+        while approximateLinearDistance <= linearDistance && tangent.t <= 1.0 {
 //            nextT += step
             tangent = getTangent(t: tangent.t + step)
             approximateLinearDistance = point.distance(to: tangent.point) // FIXME: Inefficient?
         }
 
-        if tangent.t >= 1.0 {
+        if tangent.t > 1.0 {
             fatalError() // Implement
             //            return .insufficient(remaining: <#T##CGFloat#>)
         }

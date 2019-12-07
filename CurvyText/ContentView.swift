@@ -44,7 +44,7 @@ struct ContentView: View {
 
             PathText(text: text, path: path)
 
-            ControlPoint(position: $P0)hte
+            ControlPoint(position: $P0)
                 .foregroundColor(.green)
 
             ControlPoint(position: $P1)
