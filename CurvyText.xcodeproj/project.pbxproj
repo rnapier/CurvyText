@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 50;
+	objectVersion = 52;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -13,8 +13,8 @@
 		FB2C366A239AA4AF002DDB93 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FB2C3669239AA4AF002DDB93 /* Assets.xcassets */; };
 		FB2C366D239AA4AF002DDB93 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FB2C366C239AA4AF002DDB93 /* Preview Assets.xcassets */; };
 		FB2C3670239AA4AF002DDB93 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = FB2C366E239AA4AF002DDB93 /* LaunchScreen.storyboard */; };
-		FB2C3678239AFE8B002DDB93 /* Draggable.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB2C3677239AFE8B002DDB93 /* Draggable.swift */; };
-		FB2C367A239AFEAD002DDB93 /* PathText.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB2C3679239AFEAD002DDB93 /* PathText.swift */; };
+		FB2C367E239C09CE002DDB93 /* PathText in Frameworks */ = {isa = PBXBuildFile; productRef = FB2C367D239C09CE002DDB93 /* PathText */; };
+		FB2C3680239C0B0B002DDB93 /* Draggable.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB2C367F239C0B0B002DDB93 /* Draggable.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -26,8 +26,8 @@
 		FB2C366C239AA4AF002DDB93 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		FB2C366F239AA4AF002DDB93 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		FB2C3671239AA4AF002DDB93 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		FB2C3677239AFE8B002DDB93 /* Draggable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Draggable.swift; sourceTree = "<group>"; };
-		FB2C3679239AFEAD002DDB93 /* PathText.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PathText.swift; sourceTree = "<group>"; };
+		FB2C367B239C0868002DDB93 /* PathText */ = {isa = PBXFileReference; lastKnownFileType = folder; path = PathText; sourceTree = "<group>"; };
+		FB2C367F239C0B0B002DDB93 /* Draggable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Draggable.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -35,6 +35,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				FB2C367E239C09CE002DDB93 /* PathText in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -44,8 +45,10 @@
 		FB2C3657239AA4AC002DDB93 = {
 			isa = PBXGroup;
 			children = (
+				FB2C367B239C0868002DDB93 /* PathText */,
 				FB2C3662239AA4AC002DDB93 /* CurvyText */,
 				FB2C3661239AA4AC002DDB93 /* Products */,
+				FB2C367C239C09CE002DDB93 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -63,8 +66,7 @@
 				FB2C3663239AA4AC002DDB93 /* AppDelegate.swift */,
 				FB2C3665239AA4AC002DDB93 /* SceneDelegate.swift */,
 				FB2C3667239AA4AC002DDB93 /* ContentView.swift */,
-				FB2C3677239AFE8B002DDB93 /* Draggable.swift */,
-				FB2C3679239AFEAD002DDB93 /* PathText.swift */,
+				FB2C367F239C0B0B002DDB93 /* Draggable.swift */,
 				FB2C3669239AA4AF002DDB93 /* Assets.xcassets */,
 				FB2C366E239AA4AF002DDB93 /* LaunchScreen.storyboard */,
 				FB2C3671239AA4AF002DDB93 /* Info.plist */,
@@ -79,6 +81,13 @@
 				FB2C366C239AA4AF002DDB93 /* Preview Assets.xcassets */,
 			);
 			path = "Preview Content";
+			sourceTree = "<group>";
+		};
+		FB2C367C239C09CE002DDB93 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -97,6 +106,9 @@
 			dependencies = (
 			);
 			name = CurvyText;
+			packageProductDependencies = (
+				FB2C367D239C09CE002DDB93 /* PathText */,
+			);
 			productName = CurvyText;
 			productReference = FB2C3660239AA4AC002DDB93 /* CurvyText.app */;
 			productType = "com.apple.product-type.application";
@@ -154,9 +166,8 @@
 			files = (
 				FB2C3664239AA4AC002DDB93 /* AppDelegate.swift in Sources */,
 				FB2C3666239AA4AC002DDB93 /* SceneDelegate.swift in Sources */,
-				FB2C367A239AFEAD002DDB93 /* PathText.swift in Sources */,
 				FB2C3668239AA4AC002DDB93 /* ContentView.swift in Sources */,
-				FB2C3678239AFE8B002DDB93 /* Draggable.swift in Sources */,
+				FB2C3680239C0B0B002DDB93 /* Draggable.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -350,6 +361,13 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		FB2C367D239C09CE002DDB93 /* PathText */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = PathText;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = FB2C3658239AA4AC002DDB93 /* Project object */;
 }

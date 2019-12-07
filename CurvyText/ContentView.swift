@@ -7,6 +7,7 @@
 //
 
 import SwiftUI
+import PathText
 
 struct ContentView: View {
     @State var P0 = CGPoint(x: 50, y: 500)

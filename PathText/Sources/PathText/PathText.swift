@@ -8,15 +8,21 @@
 
 import SwiftUI
 
-struct PathText: UIViewRepresentable {
-    var text: NSAttributedString
-    var path: Path
+@available(iOS 13.0, *)
+public struct PathText: UIViewRepresentable {
+    public var text: NSAttributedString
+    public var path: Path
 
-    func makeUIView(context: UIViewRepresentableContext<PathText>) -> PathTextView {
+    public init(text: NSAttributedString, path: Path) {
+        self.text = text
+        self.path = path
+    }
+
+    public func makeUIView(context: UIViewRepresentableContext<PathText>) -> PathTextView {
         PathTextView()
     }
 
-    func updateUIView(_ uiView: PathTextView, context: UIViewRepresentableContext<PathText>) {
+    public func updateUIView(_ uiView: PathTextView, context: UIViewRepresentableContext<PathText>) {
         uiView.text = text
         uiView.path = path
     }
@@ -25,15 +31,16 @@ struct PathText: UIViewRepresentable {
 /*
  Draws attributed text along a cubic Bezier path defined by P0, P1, P2, and P3
  */
-class PathTextView: UIView {
+@available(iOS 13.0, *)
+public class PathTextView: UIView {
 
-    var path = Path() {
+    public var path = Path() {
         didSet {
             setNeedsDisplay()
         }
     }
 
-    var text: NSAttributedString {
+    public var text: NSAttributedString {
         get { textStorage }
         set {
             textStorage.setAttributedString(newValue)
@@ -54,7 +61,7 @@ class PathTextView: UIView {
     private var locations: [CGPoint] = []
     private var lineFragmentOrigin = CGPoint.zero
 
-    init() {
+    public init() {
         layoutManager.addTextContainer(textContainer)
         textStorage.addLayoutManager(layoutManager)
         super.init(frame: .zero)
@@ -63,7 +70,7 @@ class PathTextView: UIView {
 
     required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
 
-    override func draw(_ rect: CGRect) {
+    public override func draw(_ rect: CGRect) {
 
         let tangents = path.tangents(at: locations.map { $0.x })
 
@@ -118,13 +125,9 @@ extension CGPoint {
         let dy = y - other.y
         return hypot(dx, dy)
     }
-
-    static func + (lhs: CGPoint, rhs: CGSize) -> CGPoint {
-        return CGPoint(x: lhs.x + rhs.width,
-                       y: lhs.y + rhs.height)
-    }
 }
 
+@available(iOS 13.0.0, *)
 struct PathText_Previews: PreviewProvider {
     static let text: NSAttributedString = {
         let string = NSString("You can display text along a curve, with bold, color, and big text.")
@@ -237,6 +240,7 @@ enum NextTangent {
     case insufficient(remaining: CGFloat)
 }
 
+@available(iOS 13.0, *)
 extension Path {
     func sections() -> [PathSection] {
         var sections: [PathSection] = []

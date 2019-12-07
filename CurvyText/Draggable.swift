@@ -8,6 +8,7 @@
 
 import SwiftUI
 
+@available(iOS 13.0, *)
 struct Draggable<Content: View>: View {
     let content: Content
     @Binding var position: CGPoint
@@ -34,8 +35,16 @@ struct Draggable<Content: View>: View {
     }
 }
 
+@available(iOS 13.0, *)
 extension View {
     func draggable(position: Binding<CGPoint>) -> some View {
         Draggable(content: self, position: position)
+    }
+}
+
+extension CGPoint {
+    static func + (lhs: CGPoint, rhs: CGSize) -> CGPoint {
+        return CGPoint(x: lhs.x + rhs.width,
+                       y: lhs.y + rhs.height)
     }
 }
