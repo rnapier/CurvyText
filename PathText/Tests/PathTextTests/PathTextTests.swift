@@ -26,7 +26,7 @@ final class PathTextTests: XCTestCase {
         let path = Path() {
             $0.move(to: P0)
             $0.addCurve(to: P3, control1: P1, control2: P2)
-        }
+        }.cgPath
 
         let sections = path.sections()
 
@@ -76,7 +76,7 @@ final class PathTextTests: XCTestCase {
         let path = Path() {
             $0.move(to: P0)
             $0.addLine(to: P1)
-        }
+        }.cgPath
 
         let sections = path.sections()
 
@@ -112,7 +112,7 @@ final class PathTextTests: XCTestCase {
         let path = Path() {
             $0.move(to: P0)
             $0.addLine(to: P1)
-        }
+        }.cgPath
 
         let sections = path.sections()
 
@@ -152,7 +152,7 @@ final class PathTextTests: XCTestCase {
             $0.move(to: P0)
             $0.addLine(to: P1)
             $0.addLine(to: P2)
-        }
+        }.cgPath
 
         let sections = path.sections()
 
@@ -198,7 +198,7 @@ final class PathTextTests: XCTestCase {
         let path = Path() {
             $0.move(to: P0)
             $0.addQuadCurve(to: P2, control: P1)
-        }
+        }.cgPath
 
 
         let sections = path.sections()
