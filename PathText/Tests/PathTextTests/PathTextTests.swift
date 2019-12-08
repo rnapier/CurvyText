@@ -142,59 +142,89 @@ final class PathTextTests: XCTestCase {
         ])
     }
 
-//    func testTwoLines() {
-//
-//        let P0 = CGPoint(x: 0, y: 0)
-//        let P1 = CGPoint(x: 400, y: 400)
-//        let P2 = CGPoint(x: 800, y: 0)
-//
-//        let path = Path() {
-//            $0.move(to: P0)
-//            $0.addLine(to: P1)
-//            $0.addLine(to: P2)
-//        }
-//
-//        let sections = path.sections()
-//
-//        XCTAssertEqual(sections.count, 2)
-//
-//        guard let section1 = sections.first as? PathLineSection else {
-//            XCTFail()
-//            return
-//        }
-//
-//        XCTAssertEqual(section1.start, P0)
-//        XCTAssertEqual(section1.end, P1)
-//
-//        guard let section2 = sections.dropFirst().first as? PathLineSection else {
-//            XCTFail()
-//            return
-//        }
-//
-//        XCTAssertEqual(section2.start, P1)
-//        XCTAssertEqual(section2.end, P2)
-//
-//
-//        let tangents = path.getTangents(atLocations: [0, 100, 200, 300, 400, 500, 600, 700])
-//
-//        let angle: CGFloat = atan(1)
-//
-//        XCTAssertEqual(tangents, [
-//            PathTangent(t: 0.0, point: CGPoint(x: 0.0, y: 0.0), angle: angle),
-//            PathTangent(t: 0.08900000000000007, point: CGPoint(x: 71.200000000000050, y: 71.200000000000050), angle: angle),
-//            PathTangent(t: 0.17800000000000013, point: CGPoint(x: 142.40000000000010, y: 142.40000000000010), angle: angle),
-//            PathTangent(t: 0.26700000000000020, point: CGPoint(x: 213.60000000000014, y: 213.60000000000014), angle: angle),
-//            PathTangent(t: 0.35600000000000026, point: CGPoint(x: 284.80000000000020, y: 284.80000000000020), angle: angle),
-//            PathTangent(t: 0.44500000000000034, point: CGPoint(x: 356.00000000000030, y: 356.00000000000030), angle: angle),
-//            PathTangent(t: 0.53400000000000040, point: CGPoint(x: 427.20000000000030, y: 427.20000000000030), angle: angle),
-//            PathTangent(t: 0.62300000000000040, point: CGPoint(x: 498.40000000000040, y: 498.40000000000040), angle: angle),
-//        ])
-//    }
+    func testTwoLines() {
+
+        let P0 = CGPoint(x: 0, y: 0)
+        let P1 = CGPoint(x: 400, y: 400)
+        let P2 = CGPoint(x: 800, y: 0)
+
+        let path = Path() {
+            $0.move(to: P0)
+            $0.addLine(to: P1)
+            $0.addLine(to: P2)
+        }
+
+        let sections = path.sections()
+
+        XCTAssertEqual(sections.count, 2)
+
+        guard let section1 = sections.first as? PathLineSection else {
+            XCTFail()
+            return
+        }
+
+        XCTAssertEqual(section1.start, P0)
+        XCTAssertEqual(section1.end, P1)
+
+        guard let section2 = sections.dropFirst().first as? PathLineSection else {
+            XCTFail()
+            return
+        }
+
+        XCTAssertEqual(section2.start, P1)
+        XCTAssertEqual(section2.end, P2)
 
 
-    static var allTests = [
-        ("testCurve", testCurve),
-        ("testFlatLine", testFlatLine),
-        ("testLine", testLine),
-    ]
+        let tangents = path.getTangents(atLocations: [0, 100, 200, 300, 400, 500, 600, 700])
+
+        XCTAssertEqual(tangents, [
+            PathTangent(t: 0.0, point: CGPoint(x: 0.0, y: 0.0), angle: 0.7853981633974483),
+            PathTangent(t: 0.17700000000000013, point: CGPoint(x: 70.80000000000005, y: 70.80000000000005), angle: 0.7853981633974483),
+            PathTangent(t: 0.35400000000000026, point: CGPoint(x: 141.6000000000001, y: 141.6000000000001), angle: 0.7853981633974483),
+            PathTangent(t: 0.5310000000000004, point: CGPoint(x: 212.40000000000015, y: 212.40000000000015), angle: 0.7853981633974483),
+            PathTangent(t: 0.7080000000000005, point: CGPoint(x: 283.2000000000002, y: 283.2000000000002), angle: 0.7853981633974483),
+            PathTangent(t: 0.8850000000000007, point: CGPoint(x: 354.0000000000003, y: 354.0000000000003), angle: 0.7853981633974483),
+            PathTangent(t: 0.0, point: CGPoint(x: 400.0, y: 400.0), angle: -0.7853981633974483),
+            PathTangent(t: 0.17700000000000013, point: CGPoint(x: 470.80000000000007, y: 329.19999999999993), angle: -0.7853981633974483),
+        ])
+    }
+
+    func testQuadCurve() {
+
+        let P0 = CGPoint(x: 50, y: 500)
+        let P1 = CGPoint(x: 300, y: 300)
+        let P2 = CGPoint(x: 650, y: 500)
+
+        let path = Path() {
+            $0.move(to: P0)
+            $0.addQuadCurve(to: P2, control: P1)
+        }
+
+
+        let sections = path.sections()
+
+        XCTAssertEqual(sections.count, 1)
+
+        guard let section1 = sections.first as? PathQuadCurveSection else {
+            XCTFail()
+            return
+        }
+
+        XCTAssertEqual(section1.p0, P0)
+        XCTAssertEqual(section1.p1, P1)
+        XCTAssertEqual(section1.p2, P2)
+
+
+        let tangents = path.getTangents(atLocations: [0, 100, 200, 300, 400, 500, 600, 700])
+
+        XCTAssertEqual(tangents, [
+            PathTangent(t: 0.0, point: CGPoint(x: 50.0, y: 500.0), angle: -0.6747409422235526),
+            PathTangent(t: 0.16300000000000012, point: CGPoint(x: 134.15690000000006, y: 445.4275999999999), angle: -0.468592129688314),
+            PathTangent(t: 0.33400000000000024, point: CGPoint(x: 228.1556000000001, y: 411.0223999999999), angle: -0.23014641756505352),
+            PathTangent(t: 0.5050000000000003, point: CGPoint(x: 328.00250000000017, y: 400.01), angle: 0.00665547577262706),
+            PathTangent(t: 0.6670000000000005, point: CGPoint(x: 427.9889000000003, y: 411.15560000000005), angle: 0.20787811837303863),
+            PathTangent(t: 0.8150000000000006, point: CGPoint(x: 523.9225000000004, y: 439.6900000000001), angle: 0.3632260863338026),
+            PathTangent(t: 0.9500000000000007, point: CGPoint(x: 615.2500000000005, y: 481.0000000000002), angle: 0.48088728019533633),
+        ])
+    }
 }
