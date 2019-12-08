@@ -82,11 +82,7 @@ public class PathTextView: UIView {
 
     public override func draw(_ rect: CGRect) {
 
-        let tangents = path.tangents(atLocations: locations.map { $0.x })
-
-        let sections = path.sections()
-
-        guard let pathStart = sections.first?.start else { return }
+        let tangents = path.getTangents(atLocations: locations.map { $0.x })
 
         let context = UIGraphicsGetCurrentContext()!
 
@@ -110,23 +106,6 @@ public class PathTextView: UIView {
             context.restoreGState()
         }
     }
-}
-
-// The Bezier function at t
-func bezier(_ t: CGFloat, _ P0: CGFloat, _ P1: CGFloat, _ P2: CGFloat, _ P3: CGFloat) -> CGFloat {
-           (1-t)*(1-t)*(1-t)         * P0
-     + 3 *       (1-t)*(1-t) *     t * P1
-     + 3 *             (1-t) *   t*t * P2
-     +                         t*t*t * P3
-}
-
-// The slope of the Bezier function at t
-func bezierPrime(_ t: CGFloat, _ P0: CGFloat, _ P1: CGFloat, _ P2: CGFloat, _ P3: CGFloat) -> CGFloat {
-       0
-    -  3 * (1-t)*(1-t) * P0
-    + (3 * (1-t)*(1-t) * P1) - (6 * t * (1-t) * P1)
-    - (3 *         t*t * P2) + (6 * t * (1-t) * P2)
-    +  3 * t*t * P3
 }
 
 extension CGPoint {
@@ -194,7 +173,6 @@ struct PathText_Previews: PreviewProvider {
         }
     }
 
-
     static func LineAndCurveView() -> some View {
         let P0 = CGPoint(x: 50, y: 500)
         let P1 = CGPoint(x: 150, y: 300)
@@ -214,12 +192,28 @@ struct PathText_Previews: PreviewProvider {
             path.stroke(Color.blue, lineWidth: 2)
         }
     }
+
+    static func QuadCurveView() -> some View {
+        let P0 = CGPoint(x: 50, y: 500)
+        let P1 = CGPoint(x: 300, y: 300)
+        let P2 = CGPoint(x: 650, y: 500)
+
+        let path = Path() {
+            $0.move(to: P0)
+            $0.addQuadCurve(to: P2, control: P1)
+        }
+
+        return PathText(text: text, path: path)
+    }
+
+
     static var previews: some View {
         Group {
             CurveView()
             LineView()
             LinesView()
             LineAndCurveView()
+            QuadCurveView()
         }
     }
 }
@@ -241,7 +235,6 @@ extension PathSection {
         // of guesses, but this is tricky since if we go too far out, the
         // curve might loop back on leading to incorrect results. Tuning
         // kStep is good start.
-        //        func getOffset(atDistance distance: CGFloat, from point: CGPoint, offset: CGFloat) -> CGFloat {
         let point = lastTangent.point
 
         let step: CGFloat = 0.001 // 0.0001 - 0.001 work well
@@ -286,7 +279,6 @@ extension Path {
                 start = nil
 
             case .move(to: let p):
-//                sections.append(PathMoveSection(to: p))
                 start = start ?? p
                 current = p
 
@@ -301,17 +293,16 @@ extension Path {
                 current = p
 
             case let .quadCurve(to: p2, control: p1):
-                fatalError()
-//                sections.append(PathQuadCurveSection(p0: current ?? .zero, p1: p1, p2: p2))
-//                start = start ?? .zero
-//                current = p2
+                sections.append(PathQuadCurveSection(p0: current ?? .zero, p1: p1, p2: p2))
+                start = start ?? .zero
+                current = p2
             }
         }
         return sections
     }
 
     // Locations must be in ascending order
-    func tangents(atLocations locations: [CGFloat]) -> [PathTangent] {
+    func getTangents(atLocations locations: [CGFloat]) -> [PathTangent] {
         assert(locations == locations.sorted())
 
         var tangents: [PathTangent] = []
@@ -341,9 +332,9 @@ extension Path {
                 lastLocation = location
                 locations = locations.dropFirst()
 
-            case .insufficient(remainingLinearDistance: _):
+            case .insufficient(remainingLinearDistance: let remaining):
                 lastTangent = nil
-                lastLocation = location
+                lastLocation = location + remaining
                 sections = sections.dropFirst()
             }
         }
@@ -368,11 +359,36 @@ struct PathLineSection: PathSection {
     }
 }
 
-//struct PathQuadCurveSection: PathSection {
-//    let p0, p1, p2: CGPoint
-//    var start: CGPoint { p0 }
-//    var end: CGPoint { p2 }
-//}
+struct PathQuadCurveSection: PathSection {
+    let p0, p1, p2: CGPoint
+    var start: CGPoint { p0 }
+    var end: CGPoint { p2 }
+
+    func getTangent(t: CGFloat) -> PathTangent {
+        let dx = bezierPrime(t, p0.x, p1.x, p2.x)
+        let dy = bezierPrime(t, p0.y, p1.y, p2.y)
+
+        let x = bezier(t, p0.x, p1.x, p2.x)
+        let y = bezier(t, p0.y, p1.y, p2.y)
+
+        return PathTangent(t: t,
+                           point: CGPoint(x: x, y: y),
+                           angle: atan2(dy, dx))
+    }
+
+    // The quadratic Bezier function at t
+    private func bezier(_ t: CGFloat, _ P0: CGFloat, _ P1: CGFloat, _ P2: CGFloat) -> CGFloat {
+               (1-t)*(1-t)       * P0
+         + 2 *       (1-t) *   t * P1
+         +                   t*t * P2
+    }
+
+    // The slope of the quadratic Bezier function at t
+    private func bezierPrime(_ t: CGFloat, _ P0: CGFloat, _ P1: CGFloat, _ P2: CGFloat) -> CGFloat {
+          2 * (1-t) * (P1 - P0)
+        + 2 * t * (P2 - P1)
+    }
+}
 
 struct PathCurveSection: PathSection {
 
@@ -390,5 +406,22 @@ struct PathCurveSection: PathSection {
         return PathTangent(t: t,
                            point: CGPoint(x: x, y: y),
                            angle: atan2(dy, dx))
+    }
+
+    // The cubic Bezier function at t
+    private func bezier(_ t: CGFloat, _ P0: CGFloat, _ P1: CGFloat, _ P2: CGFloat, _ P3: CGFloat) -> CGFloat {
+               (1-t)*(1-t)*(1-t)         * P0
+         + 3 *       (1-t)*(1-t) *     t * P1
+         + 3 *             (1-t) *   t*t * P2
+         +                         t*t*t * P3
+    }
+
+    // The slope of the cubic Bezier function at t
+    private func bezierPrime(_ t: CGFloat, _ P0: CGFloat, _ P1: CGFloat, _ P2: CGFloat, _ P3: CGFloat) -> CGFloat {
+           0
+        -  3 * (1-t)*(1-t) * P0
+        + (3 * (1-t)*(1-t) * P1) - (6 * t * (1-t) * P1)
+        - (3 *         t*t * P2) + (6 * t * (1-t) * P2)
+        +  3 * t*t * P3
     }
 }
