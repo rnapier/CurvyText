@@ -45,7 +45,6 @@ public struct PathText: UIViewRepresentable {
 /*
  Draws attributed text along a cubic Bezier path defined by P0, P1, P2, and P3
  */
-@available(iOS 11.0, *)
 public class PathTextView: UIView {
 
     public var path: CGPath = CGMutablePath() {
