@@ -53,64 +53,44 @@ enum NextTangent {
     case insufficient(remainingLinearDistance: CGFloat)
 }
 
-extension CGPath {
+import SwiftUI
+
+@available(iOS 13.0, *)
+extension Path {
     func sections() -> [PathSection] {
-        class Applier {
             var sections: [PathSection] = []
             var start: CGPoint?
             var current: CGPoint?
 
-            func add(element: CGPathElement) {
-                // FIXME: Filter zero-length?
-                switch element.type {
-                case .closeSubpath:
-                    sections.append(PathLineSection(start: current ?? .zero, end: start ?? .zero))
-                    current = start
-                    start = nil
+        self.forEach { element in
+            switch element {
+            case .move(let to):
+                start = start ?? to
+                current = to
 
-                case .moveToPoint:
-                    let p = element.points[0]
-                    start = start ?? p
-                    current = p
+            case .line(let to):
+                sections.append(PathLineSection(start: current ?? .zero, end: to))
+                start = start ?? .zero
+                current = to
 
-                case .addCurveToPoint:
-                    let points = element.points
-                    let (p1, p2, p3) = (points[0], points[1], points[2])
-                    sections.append(PathCurveSection(p0: current ?? .zero, p1: p1, p2: p2, p3: p3))
-                    start = start ?? .zero
-                    current = p3
+            case .quadCurve(let to, let control):
+                sections.append(PathQuadCurveSection(p0: current ?? .zero, p1: control, p2: to))
+                start = start ?? .zero
+                current = to
 
-                case .addLineToPoint:
-                    let p = element.points[0]
-                    sections.append(PathLineSection(start: current ?? .zero, end: p))
-                    start = start ?? .zero
-                    current = p
+            case .curve(let to, let control1, let control2):
+                sections.append(PathCurveSection(p0: current ?? .zero, p1: control1, p2: control2, p3: to))
+                start = start ?? .zero
+                current = to
 
-                case .addQuadCurveToPoint:
-                    let points = element.points
-                    let (p1, p2) = (points[0], points[1])
-                    sections.append(PathQuadCurveSection(p0: current ?? .zero, p1: p1, p2: p2))
-                    start = start ?? .zero
-                    current = p2
-
-                @unknown default:
-                    break
-                }
+            case .closeSubpath:
+                sections.append(PathLineSection(start: current ?? .zero, end: start ?? .zero))
+                current = start
+                start = nil
             }
         }
 
-        func f(info: UnsafeMutableRawPointer?, elementPtr: UnsafePointer<CGPathElement>) {
-            info?
-                .assumingMemoryBound(to: Applier.self)
-                .pointee
-                .add(element: elementPtr.pointee)
-        }
-
-        var applier = Applier()
-
-        self.apply(info: &applier, function: f)
-
-        return applier.sections
+        return sections
     }
 
     // Locations must be in ascending order
@@ -235,5 +215,13 @@ struct PathCurveSection: PathSection {
         + (3 * (1-t)*(1-t) * P1) - (6 * t * (1-t) * P1)
         - (3 *         t*t * P2) + (6 * t * (1-t) * P2)
         +  3 * t*t * P3
+    }
+}
+
+extension CGPoint {
+    func distance(to other: CGPoint) -> CGFloat {
+        let dx = x - other.x
+        let dy = y - other.y
+        return hypot(dx, dy)
     }
 }
