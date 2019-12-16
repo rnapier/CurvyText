@@ -87,9 +87,9 @@ public struct PathText {
 ////                return leadingBottom + rect.size.width / 2
 //            }
 
-//            lineFragmentOrigin = layoutManager
-//                .lineFragmentRect(forGlyphAt: 0, effectiveRange: nil)
-//                .origin
+            lineFragmentOrigin = layoutManager
+                .lineFragmentRect(forGlyphAt: 0, effectiveRange: nil)
+                .origin
         }
     }
     public var path: Path
@@ -117,7 +117,7 @@ public struct PathText {
 extension PathText: View {
     public var body: some View {
 
-        let tangents = path.getTangents(atLocations: glyphPositions.map {$0.rect.origin.x})
+        let tangents = path.getTangents(atLocations: glyphPositions.map {$0.rect.midX})
 
         var strings: [String] = [] // FIXME: Will be NSAttributedString
         var glyphRange = NSRange(location: 0, length: 1)
@@ -147,14 +147,14 @@ extension PathText: View {
                 Text(verbatim: run.position.attributedString.string)
                     .font(.system(size: 48))
                     .padding(EdgeInsets(top: -run.position.baseline, leading: 0, bottom: run.position.baseline, trailing: 0))
-                    .border(Color.green)
-                    .rotationEffect(.radians(run.angle), anchor: .bottomLeading)
-                    .offset(x: run.position.rect.width / 2, y: (-run.position.rect.height / 2))
+//                    .border(Color.green)
+                    .rotationEffect(.radians(run.angle), anchor: .bottom)
+                    .offset(x: 0, y: (-run.position.rect.height / 2))
                     .position(run.point)
-                Circle()
-                    .foregroundColor(.red)
-                    .frame(width: 5, height: 5)
-                    .position(run.point)
+//                Circle()
+//                    .foregroundColor(.red)
+//                    .frame(width: 5, height: 5)
+//                    .position(run.point)
             }
         }
         .border(Color.red)
@@ -242,7 +242,6 @@ struct PathText_Previews: PreviewProvider {
             $0.move(to: P0)
             $0.addLine(to: P1)
             $0.addCurve(to: P3, control1: C1, control2: C2)
-
         }
 
         return ZStack {
@@ -264,6 +263,22 @@ struct PathText_Previews: PreviewProvider {
         return PathText(text: text, path: path)
     }
 
+    static func RoundedRectView() -> some View {
+
+        let P0 = CGPoint(x: 100, y: 100)
+        let size = CGSize(width: 300, height: 200)
+        let cornerSize = CGSize(width: 50, height: 50)
+
+        let path = Path() {
+            $0.addRoundedRect(in: CGRect(origin: P0, size: size), cornerSize: cornerSize)
+        }
+
+        return ZStack {
+            PathText(text: text, path: path)
+//            path.stroke(Color.blue, lineWidth: 2)
+        }
+    }
+
 
     static var previews: some View {
         Group {
@@ -272,6 +287,7 @@ struct PathText_Previews: PreviewProvider {
             LinesView()
             LineAndCurveView()
             QuadCurveView()
+            RoundedRectView()
         }.previewLayout(.fixed(width: 700, height: 500))
     }
 }

@@ -97,22 +97,16 @@ extension Path {
     func getTangents(atLocations locations: [CGFloat]) -> [PathTangent] {
         assert(locations == locations.sorted())
 
-        var tangents: [PathTangent] = []
-
         var sections = self.sections()[...]
+
+        var tangents: [PathTangent] = []
         var locations = locations[...]
 
         var lastLocation: CGFloat = 0.0
-        var lastTangent: PathTangent?
+        var lastTangent: PathTangent? = nil
 
         while let location = locations.first, let section = sections.first  {
             let currentTangent = lastTangent ?? section.getTangent(t: 0)
-
-            guard location != lastLocation else {
-                tangents.append(currentTangent)
-                locations = locations.dropFirst()
-                continue
-            }
 
             let linearDistance = location - lastLocation
 
@@ -124,9 +118,9 @@ extension Path {
                 lastLocation = location
                 locations = locations.dropFirst()
 
-            case .insufficient(remainingLinearDistance: let remaining):
+            case let .insufficient(remainingLinearDistance: remain):
+                lastLocation += remain
                 lastTangent = nil
-                lastLocation = location + remaining
                 sections = sections.dropFirst()
             }
         }
