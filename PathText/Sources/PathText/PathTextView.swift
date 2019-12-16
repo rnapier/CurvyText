@@ -28,117 +28,98 @@ private struct GlyphPosition {
 @available(iOS 13.0, *)
 public struct PathText {
     public var text: NSAttributedString {
-        get { textStorage }
-        set {
-            textStorage.setAttributedString(newValue)
-
-            let line = CTLineCreateWithAttributedString(textStorage)
-
-            var positions: [GlyphPosition] = []
-            var ascent: CGFloat = 0
-            var descent: CGFloat = 0
-            var position: CGPoint = .zero
-            for run in CTLineGetGlyphRuns(line) as! [CTRun] {
-                let glyphCount = CTRunGetGlyphCount(run)
-
-                let stringIndexes = UnsafeMutableBufferPointer<CFIndex>.allocate(capacity: glyphCount)
-                defer { stringIndexes.deallocate() }
-
-                CTRunGetStringIndices(run, CFRange(), stringIndexes.baseAddress!)
-
-                // Remember, it's possible to have one character made up of multiple glyphs (Ö can be two glyphs)
-                // Also, one glyph can be multiple characters (ff ligature)
-                var glyphIndex = 0
-                while glyphIndex < glyphCount {
-                    let glyphRange = CFRange(location: glyphIndex, length: 1)
-                    let currentCharacterIndex = stringIndexes[glyphIndex]
-                    let nextCharacterIndex = (glyphIndex == glyphCount - 1) ? textStorage.string.count : stringIndexes[glyphIndex + 1]
-                    let characterRange = CFRange(location: currentCharacterIndex, length: nextCharacterIndex - currentCharacterIndex)
-
-                    let attributedString = textStorage.attributedSubstring(from: NSRange(location: characterRange.location,
-                                                                                         length: characterRange.length))
-
-                    let attributes = CTRunGetAttributes(run) as NSDictionary    // Includes manufactured attributes, particularly font
-
-                    let font = attributes[NSAttributedString.Key.font] as? UIFont ?? UIFont.systemFont(ofSize: UIFont.systemFontSize)
-                    let baseline = font.descender
-
-                    let width = CTRunGetTypographicBounds(run, glyphRange,
-                                                          &ascent, &descent, nil)
-
-                    CTRunGetPositions(run, glyphRange, &position)
-
-                    let rect = CGRect(origin: position, size: CGSize(width: CGFloat(width),
-                                                                     height: ascent + descent))
-
-                    positions.append(GlyphPosition(attributedString: attributedString, baseline: baseline, rect: rect))
-
-                    glyphIndex += 1 // FIXME: Handle multiple glyphs for a single character
-                }
-            }
-            self.glyphPositions = positions
-
-//            locations = (0..<layoutManager.numberOfGlyphs).map { [layoutManager] glyphIndex in
-//                return layoutManager.boundingRect(forGlyphRange: NSRange(location: glyphIndex, length: 1),
-//                                                  in: textContainer)
-////                let leadingBottom = layoutManager.location(forGlyphAt: glyphIndex).x
-////                let rect = layoutManager.boundingRect(forGlyphRange: NSRange(location: glyphIndex, length: 1),
-////                                                      in: textContainer)
-////                return leadingBottom + rect.size.width / 2
-//            }
-
-            lineFragmentOrigin = layoutManager
-                .lineFragmentRect(forGlyphAt: 0, effectiveRange: nil)
-                .origin
+        didSet {
+            updatePositions()
         }
     }
-    public var path: Path
+
+    public var path: Path {
+        didSet {
+            updateRuns()
+        }
+    }
 
     private var glyphPositions: [GlyphPosition] = []
 
-    private let layoutManager = NSLayoutManager()
-    private let textStorage = NSTextStorage()
-    private let textContainer = NSTextContainer()
-
-//    private var locations: [CGRect] = []
-    private var lineFragmentOrigin = CGPoint.zero
-
     public init(text: NSAttributedString, path: Path) {
         self.path = path
-
-//        layoutManager.addTextContainer(textContainer)
-//        textStorage.addLayoutManager(layoutManager)
-
         self.text = text
+        updatePositions()
     }
+
+    mutating private func updatePositions() {
+        let line = CTLineCreateWithAttributedString(text)
+
+        var positions: [GlyphPosition] = []
+        var ascent: CGFloat = 0
+        var descent: CGFloat = 0
+        var position: CGPoint = .zero
+        for run in CTLineGetGlyphRuns(line) as! [CTRun] {
+            let glyphCount = CTRunGetGlyphCount(run)
+
+            let stringIndexes = UnsafeMutableBufferPointer<CFIndex>.allocate(capacity: glyphCount)
+            defer { stringIndexes.deallocate() }
+
+            CTRunGetStringIndices(run, CFRange(), stringIndexes.baseAddress!)
+
+            // Remember, it's possible to have one character made up of multiple glyphs (Ö can be two glyphs)
+            // Also, one glyph can be multiple characters (ff ligature)
+            var glyphIndex = 0
+            while glyphIndex < glyphCount {
+                let glyphRange = CFRange(location: glyphIndex, length: 1)
+                let currentCharacterIndex = stringIndexes[glyphIndex]
+                let nextCharacterIndex = (glyphIndex == glyphCount - 1) ? text.string.count : stringIndexes[glyphIndex + 1]
+                let characterRange = CFRange(location: currentCharacterIndex, length: nextCharacterIndex - currentCharacterIndex)
+
+                let attributedString = text.attributedSubstring(from: NSRange(location: characterRange.location,
+                                                                                     length: characterRange.length))
+
+                let attributes = CTRunGetAttributes(run) as NSDictionary    // Includes manufactured attributes, particularly font
+
+                let font = attributes[NSAttributedString.Key.font] as? UIFont ?? UIFont.systemFont(ofSize: UIFont.systemFontSize)
+                let baseline = font.descender
+
+                let width = CTRunGetTypographicBounds(run, glyphRange,
+                                                      &ascent, &descent, nil)
+
+                CTRunGetPositions(run, glyphRange, &position)
+
+                let rect = CGRect(origin: position, size: CGSize(width: CGFloat(width),
+                                                                 height: ascent + descent))
+
+                positions.append(GlyphPosition(attributedString: attributedString, baseline: baseline, rect: rect))
+
+                glyphIndex += 1 // FIXME: Handle multiple glyphs for a single character
+            }
+        }
+        self.glyphPositions = positions
+
+        updateRuns()
+    }
+
+    mutating private func updateRuns() {
+        let tangents = path.getTangents(atLocations: glyphPositions.map {$0.rect.midX})
+        var runs: [Run] = []
+        for (tangent, position) in zip(tangents, glyphPositions) {
+            runs.append(Run(angle: Double(tangent.angle), point: tangent.point, position: position))
+        }
+        self.runs = runs
+    }
+
+    private struct Run: Identifiable {
+        let id = UUID()
+        let angle: Double
+        let point: CGPoint
+        let position: GlyphPosition
+    }
+
+    private var runs: [Run] = []
+
 }
 
 @available(iOS 13.0, *)
 extension PathText: View {
     public var body: some View {
-
-        let tangents = path.getTangents(atLocations: glyphPositions.map {$0.rect.midX})
-
-        var strings: [String] = [] // FIXME: Will be NSAttributedString
-        var glyphRange = NSRange(location: 0, length: 1)
-        while NSMaxRange(glyphRange) < layoutManager.numberOfGlyphs {
-            let characterRange = layoutManager.characterRange(forGlyphRange: glyphRange,
-                                                              actualGlyphRange: &glyphRange)
-            strings.append(textStorage.attributedSubstring(from: characterRange).string)
-            glyphRange = NSRange(location: NSMaxRange(glyphRange), length: 1)
-        }
-
-        struct Run: Identifiable {
-            let id = UUID()
-            let angle: Double
-            let point: CGPoint
-            let position: GlyphPosition
-        }
-
-        var runs: [Run] = []
-        for (tangent, position) in zip(tangents, glyphPositions) {
-            runs.append(Run(angle: Double(tangent.angle), point: tangent.point, position: position))
-        }
 
         // FIXME: include lineFragmentOrigin (but currently it's .zero)
 
