@@ -50,50 +50,14 @@ public struct PathText {
     mutating private func updatePositions() {
         let line = CTLineCreateWithAttributedString(text)
 
-        var positions: [GlyphPosition] = []
-        var ascent: CGFloat = 0
-        var descent: CGFloat = 0
-        var position: CGPoint = .zero
-        for run in CTLineGetGlyphRuns(line) as! [CTRun] {
-            let glyphCount = CTRunGetGlyphCount(run)
-
-            let stringIndexes = UnsafeMutableBufferPointer<CFIndex>.allocate(capacity: glyphCount)
-            defer { stringIndexes.deallocate() }
-
-            CTRunGetStringIndices(run, CFRange(), stringIndexes.baseAddress!)
-
-            // Remember, it's possible to have one character made up of multiple glyphs (Ö can be two glyphs)
-            // Also, one glyph can be multiple characters (ff ligature)
-            var glyphIndex = 0
-            while glyphIndex < glyphCount {
-                let glyphRange = CFRange(location: glyphIndex, length: 1)
-                let currentCharacterIndex = stringIndexes[glyphIndex]
-                let nextCharacterIndex = (glyphIndex == glyphCount - 1) ? text.string.count : stringIndexes[glyphIndex + 1]
-                let characterRange = CFRange(location: currentCharacterIndex, length: nextCharacterIndex - currentCharacterIndex)
-
-                let attributedString = text.attributedSubstring(from: NSRange(location: characterRange.location,
-                                                                                     length: characterRange.length))
-
-                let attributes = CTRunGetAttributes(run) as NSDictionary    // Includes manufactured attributes, particularly font
-
-                let font = attributes[NSAttributedString.Key.font] as? UIFont ?? UIFont.systemFont(ofSize: UIFont.systemFontSize)
-                let baseline = font.descender
-
-                let width = CTRunGetTypographicBounds(run, glyphRange,
-                                                      &ascent, &descent, nil)
-
-                CTRunGetPositions(run, glyphRange, &position)
-
-                let rect = CGRect(origin: position, size: CGSize(width: CGFloat(width),
-                                                                 height: ascent + descent))
-
-                positions.append(GlyphPosition(attributedString: attributedString, baseline: baseline, rect: rect))
-
-                glyphIndex += 1 // FIXME: Handle multiple glyphs for a single character
+        glyphPositions = line.glyphRuns.flatMap { run -> [GlyphPosition] in
+            let baseline = run.font.descender
+            return run.glyphCharacterMapping.map { (glyphRange, characterRange) in
+                GlyphPosition(attributedString: text.attributedSubstring(from: characterRange),
+                              baseline: baseline,
+                              rect: run.typographicFrame(glyphRange: glyphRange))
             }
         }
-        self.glyphPositions = positions
-
         updateRuns()
     }
 
