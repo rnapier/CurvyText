@@ -78,9 +78,8 @@ public struct PathText {
 
             let position = GlyphPosition(attributedString: glyphString,
                                          baseline: baseline,
-                                         rect: CGRect(origin: origin, size: CGSize(width: bounds.width, height: bounds.height)))
+                                         rect: bounds.offsetBy(dx: origin.x, dy: origin.y))
 
-            print(position)
             positions.append(position)
             characterIndex = NSMaxRange(characterRange)
 
@@ -119,20 +118,37 @@ extension PathText: View {
         return ZStack {
             ForEach(runs) { run in
                 Text(verbatim: run.position.attributedString.string)
-                    .font(.system(size: 48))
+                    .attributes(run.position.attributedString.attributes(at: 0, effectiveRange: nil))
                     .frame(width: run.position.rect.size.width, height: run.position.rect.size.height, alignment: .bottom)
                     .padding(EdgeInsets(top: -run.position.baseline, leading: 0, bottom: run.position.baseline, trailing: 0))
-//                    .border(Color.green)
                     .rotationEffect(.radians(run.angle), anchor: .bottom)
                     .offset(x: 0, y: (-run.position.rect.height / 2))
                     .position(run.point)
-//                Circle()
-//                    .foregroundColor(.red)
-//                    .frame(width: 5, height: 5)
-//                    .position(run.point)
             }
         }
         .border(Color.red)
+    }
+}
+
+@available(iOS 13.0.0, *)
+extension Text {
+    func attributes(_ attributes: [NSAttributedString.Key : Any]) -> Text {
+        var result = self
+
+        for (key, value) in attributes {
+            switch key {
+            case .font:
+                result = result.font(Font(value as! PlatformFont))
+
+            case .foregroundColor:
+                result = result.foregroundColor(Color(value as! PlatformColor))
+
+            default:
+                print("Unknown attribute: \(key) = \(value)")
+                break
+            }
+        }
+        return result
     }
 }
 
