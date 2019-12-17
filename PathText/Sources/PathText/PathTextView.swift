@@ -224,15 +224,34 @@ struct PathText_Previews: PreviewProvider {
         }
     }
 
+    static func TwoGlyphCharacter() -> some View {
+        let P0 = CGPoint(x: 50, y: 300)
+        let P1 = CGPoint(x: 650, y: 300)
 
+        let path = Path() {
+            $0.move(to: P0)
+            $0.addLine(to: P1)
+        }
+
+        return VStack {
+            Text("X\u{030A}")
+                .font(.system(size: 48))
+            ZStack {
+                PathText(text: NSAttributedString(string: "X\u{030A}",
+                                                  attributes: [.font: UIFont.systemFont(ofSize: 48)]), path: path)
+                path.stroke(Color.blue, lineWidth: 2)
+            }
+        }
+    }
     static var previews: some View {
         Group {
-            CurveView()
-            LineView()
-            LinesView()
-            LineAndCurveView()
-            QuadCurveView()
-            RoundedRectView()
+//            CurveView()
+//            LineView()
+//            LinesView()
+//            LineAndCurveView()
+//            QuadCurveView()
+//            RoundedRectView()
+            TwoGlyphCharacter()
         }.previewLayout(.fixed(width: 700, height: 500))
     }
 }

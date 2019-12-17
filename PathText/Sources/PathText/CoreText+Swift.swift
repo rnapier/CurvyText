@@ -44,18 +44,25 @@ extension CTRun {
     // Also, one glyph can be multiple characters (ff ligature)
     var glyphCharacterMapping: [(glyphRange: CFRange, characterRange: NSRange)] {
         var mapping: [(glyphRange: CFRange, characterRange: NSRange)] = []
-        let stringIndexes = self.stringIndices
+        let stringIndexes = self.stringIndices + [stringRange.location + stringRange.length] // Add the end of the string
 
         var glyphIndex = 0
         while glyphIndex < glyphCount {
-            let glyphRange = CFRange(location: glyphIndex, length: 1)
             let currentCharacterIndex = stringIndexes[glyphIndex]
-            let nextCharacterIndex = (glyphIndex == glyphCount - 1) ? (stringRange.location + stringRange.length) : stringIndexes[glyphIndex + 1]
+            var nextCharacterIndex = stringIndexes[glyphIndex + 1]
             let characterRange = NSRange(location: currentCharacterIndex, length: nextCharacterIndex - currentCharacterIndex)
+
+            var glyphLength = 1
+            while nextCharacterIndex == currentCharacterIndex && glyphIndex + glyphLength < glyphCount {
+                glyphLength += 1
+                nextCharacterIndex = stringIndexes[glyphIndex + glyphLength]
+            }
+
+            let glyphRange = CFRange(location: glyphIndex, length: glyphLength)
 
             mapping.append((glyphRange: glyphRange, characterRange: characterRange))
 
-            glyphIndex += 1 // FIXME: Handle multiple glyphs for a single character
+            glyphIndex += glyphLength
         }
         return mapping
     }
@@ -68,15 +75,5 @@ extension CTRun {
         CTRunGetPositions(self, glyphRange, &position)
         return CGRect(origin: position,
                       size: CGSize(width: CGFloat(width), height: ascent + descent))
-
     }
-
-//    var font: UIFont? {
-//
-//    }
-
-//    // Array of
-//    var glyphMapping: [Range<Int>] {
-//
-//    }
 }
