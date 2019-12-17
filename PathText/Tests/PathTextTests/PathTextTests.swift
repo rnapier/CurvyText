@@ -235,66 +235,10 @@ extension CFRange: Equatable {
     }
 }
 
-final class GlyphMappingTests: XCTestCase {
-    func testSimple() {
-        let string = NSAttributedString(string: "Simple",
-                                        attributes: [.font: UIFont.systemFont(ofSize: 48)])
-
-        let line = CTLineCreateWithAttributedString(string)
-
-        let runs = line.glyphRuns
-
-        XCTAssertEqual(runs.count, 1)
-
-        guard let run = runs.first else {
-            XCTFail()
-            return
-        }
-
-        let mapping = run.glyphCharacterMapping
-
-        XCTAssert(mapping.elementsEqual([
-            (glyphRange: CFRange(location: 0, length: 1), characterRange: NSRange(location: 0, length: 1)),
-            (glyphRange: CFRange(location: 1, length: 1), characterRange: NSRange(location: 1, length: 1)),
-            (glyphRange: CFRange(location: 2, length: 1), characterRange: NSRange(location: 2, length: 1)),
-            (glyphRange: CFRange(location: 3, length: 1), characterRange: NSRange(location: 3, length: 1)),
-            (glyphRange: CFRange(location: 4, length: 1), characterRange: NSRange(location: 4, length: 1)),
-            (glyphRange: CFRange(location: 5, length: 1), characterRange: NSRange(location: 5, length: 1)),
-        ], by: ==))
-    }
-
-    func testLigature() {
-        func testSimple() {
-            let string = NSAttributedString(string: "xffix",
-                                            attributes: [.font: UIFont.systemFont(ofSize: 48)])
-
-            let line = CTLineCreateWithAttributedString(string)
-
-            let runs = line.glyphRuns
-
-            XCTAssertEqual(runs.count, 1)
-
-            guard let run = runs.first else {
-                XCTFail()
-                return
-            }
-
-            let mapping = run.glyphCharacterMapping
-
-            XCTAssert(mapping.elementsEqual([
-                (glyphRange: CFRange(location: 0, length: 1), characterRange: NSRange(location: 0, length: 1)),
-                (glyphRange: CFRange(location: 1, length: 1), characterRange: NSRange(location: 1, length: 3)),
-                (glyphRange: CFRange(location: 2, length: 1), characterRange: NSRange(location: 4, length: 1)),
-            ], by: ==))
-        }
-    }
-
-//    func testComposedGlyph() {
-////        let string = NSAttributedString(string: "X̊",
-////                                        attributes: [.font: UIFont.systemFont(ofSize: 48)])
-//
-//        let string = NSAttributedString(string: "å",
-//                                                attributes: [.font: UIFont(name: "Letter Gothic Std", size: 12)])
+//final class GlyphMappingTests: XCTestCase {
+//    func testSimple() {
+//        let string = NSAttributedString(string: "Simple",
+//                                        attributes: [.font: UIFont.systemFont(ofSize: 48)])
 //
 //        let line = CTLineCreateWithAttributedString(string)
 //
@@ -310,7 +254,63 @@ final class GlyphMappingTests: XCTestCase {
 //        let mapping = run.glyphCharacterMapping
 //
 //        XCTAssert(mapping.elementsEqual([
-//            (glyphRange: CFRange(location: 0, length: 2), characterRange: NSRange(location: 0, length: 1))
+//            (glyphRange: CFRange(location: 0, length: 1), characterRange: NSRange(location: 0, length: 1)),
+//            (glyphRange: CFRange(location: 1, length: 1), characterRange: NSRange(location: 1, length: 1)),
+//            (glyphRange: CFRange(location: 2, length: 1), characterRange: NSRange(location: 2, length: 1)),
+//            (glyphRange: CFRange(location: 3, length: 1), characterRange: NSRange(location: 3, length: 1)),
+//            (glyphRange: CFRange(location: 4, length: 1), characterRange: NSRange(location: 4, length: 1)),
+//            (glyphRange: CFRange(location: 5, length: 1), characterRange: NSRange(location: 5, length: 1)),
 //        ], by: ==))
 //    }
-}
+//
+//    func testLigature() {
+//        func testSimple() {
+//            let string = NSAttributedString(string: "xffix",
+//                                            attributes: [.font: UIFont.systemFont(ofSize: 48)])
+//
+//            let line = CTLineCreateWithAttributedString(string)
+//
+//            let runs = line.glyphRuns
+//
+//            XCTAssertEqual(runs.count, 1)
+//
+//            guard let run = runs.first else {
+//                XCTFail()
+//                return
+//            }
+//
+//            let mapping = run.glyphCharacterMapping
+//
+//            XCTAssert(mapping.elementsEqual([
+//                (glyphRange: CFRange(location: 0, length: 1), characterRange: NSRange(location: 0, length: 1)),
+//                (glyphRange: CFRange(location: 1, length: 1), characterRange: NSRange(location: 1, length: 3)),
+//                (glyphRange: CFRange(location: 2, length: 1), characterRange: NSRange(location: 4, length: 1)),
+//            ], by: ==))
+//        }
+//    }
+//
+////    func testComposedGlyph() {
+//////        let string = NSAttributedString(string: "X̊",
+//////                                        attributes: [.font: UIFont.systemFont(ofSize: 48)])
+////
+////        let string = NSAttributedString(string: "å",
+////                                                attributes: [.font: UIFont(name: "Letter Gothic Std", size: 12)])
+////
+////        let line = CTLineCreateWithAttributedString(string)
+////
+////        let runs = line.glyphRuns
+////
+////        XCTAssertEqual(runs.count, 1)
+////
+////        guard let run = runs.first else {
+////            XCTFail()
+////            return
+////        }
+////
+////        let mapping = run.glyphCharacterMapping
+////
+////        XCTAssert(mapping.elementsEqual([
+////            (glyphRange: CFRange(location: 0, length: 2), characterRange: NSRange(location: 0, length: 1))
+////        ], by: ==))
+////    }
+//}

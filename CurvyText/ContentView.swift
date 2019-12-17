@@ -17,14 +17,15 @@ struct ContentView: View {
 
     
     let text: NSAttributedString = {
-        let string = NSString("You can display text along a curve, with bold, color, and big text.")
+//        let string = NSString("You can display text along a curve, with bold, color, and big text.")
+        let string = NSString("Y͑ͩ̾ͭ̀̓͂oͯ͋ͭͬ̚u̩͐ ̖̙c̪̉ạ̽n ̫̫̳̙̻̩di̎́̓̾̅͊s̲̯̻̳͐̌̋̂̅͂ͅͅpla̺̼̰͚̣̦̣y̺̝͌ͦ ̂͋̓́͗̎̚t̟̩͕͉̐ͦ̎̍ẹ̭̺͓̳͔͈̄ͤͣ̐̑ͦ̀xͥͩ̓̈t͕̭̥͈ͣ̃̍͂̑ͅ a͖̗̿ͨl̉͑̊ͯ̿̆o͍̤̳͕n̫̥̓̾g̈́ a ͚̽c͔̫̪̰̳ͫ̽̀̍̚ur̞̬͎͍͈̙ͩͧ͑ͩ͒̆ve̪̠̼͖̩̤̲̐͗̒̃ͯ̅̽")
 
-        let s = NSMutableAttributedString(string: string as String,
-                                          attributes: [.font: UIFont.systemFont(ofSize: 16)])
+        let s = NSMutableAttributedString(string: string as String)//,
+//                                          attributes: [.font: UIFont.systemFont(ofSize: 48)])
 
-        s.addAttributes([.font: UIFont.boldSystemFont(ofSize: 16)], range: string.range(of: "bold"))
-        s.addAttributes([.foregroundColor: UIColor.red], range: string.range(of: "color"))
-        s.addAttributes([.font: UIFont.systemFont(ofSize: 32)], range: string.range(of: "big text"))
+//        s.addAttributes([.font: UIFont.boldSystemFont(ofSize: 16)], range: string.range(of: "bold"))
+//        s.addAttributes([.foregroundColor: UIColor.red], range: NSRange(location: 10, length: 20)) // string.range(of: "color"))
+//        s.addAttributes([.font: UIFont(name: "AmericanTypewriter", size: 96)!], range: NSRange(location: 40, length: 20)) // string.range(of: "big text"))
         return s
     }()
 

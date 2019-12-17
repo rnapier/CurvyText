@@ -9,6 +9,17 @@
 import SwiftUI
 import CoreText
 
+#if canImport(UIKit)
+import UIKit
+typealias PlatformFont = UIFont
+typealias PlatformColor = UIColor
+#elseif canImport(AppKit)
+typealias PlatformFont = NSFont
+typealias PlatformColor = NSColor
+#else
+#error("Unsupported platform")
+#endif
+
 // Terminology:
 //     t: Value from 0 to 1, where 0 is the starting point, and 1 is the final point.
 //        Note that t=0.5 does *not* mean "half-way through the curve."
@@ -28,7 +39,8 @@ private struct GlyphPosition {
 @available(iOS 13.0, *)
 public struct PathText {
     public var text: NSAttributedString {
-        didSet {
+        get { NSAttributedString(attributedString: textStorage) }
+        set { textStorage.setAttributedString(newValue)
             updatePositions()
         }
     }
@@ -39,36 +51,35 @@ public struct PathText {
         }
     }
 
-    private var glyphPositions: [GlyphPosition] = []
-
     public init(text: NSAttributedString, path: Path) {
-        self.path = path
-        self.text = text
-        updatePositions()
-    }
-
-    mutating private func updatePositions() {
-        let layoutManager = NSLayoutManager()
-        let textStorage = NSTextStorage(attributedString: text)
-        let textContainer = NSTextContainer()
         layoutManager.addTextContainer(textContainer)
         textStorage.addLayoutManager(layoutManager)
 
-        var positions: [GlyphPosition] = []
+        self.path = path
+        self.text = text
+    }
 
-        var characterIndex = 0
+    private var glyphPositions: [GlyphPosition] = []
 
-        while characterIndex < textStorage.length {
+    private let layoutManager = NSLayoutManager()
+    private let textStorage = NSTextStorage()
+    private let textContainer = NSTextContainer()
+
+    private mutating func updatePositions() {
+
+        self.glyphPositions = Array(sequence(state: 0) { [textStorage, layoutManager] (characterIndex) in
+            guard characterIndex < textStorage.length else { return nil }
+
             let string = textStorage.string as NSString
             let characterRange = string.rangeOfComposedCharacterSequence(at: characterIndex)
             var actualCharacterRange = NSRange()
-            let glyphRange = layoutManager.glyphRange(forCharacterRange: characterRange, actualCharacterRange: &actualCharacterRange)
+            let glyphRange = layoutManager.glyphRange(forCharacterRange: characterRange,
+                                                      actualCharacterRange: &actualCharacterRange)
             assert(characterRange == actualCharacterRange)  // It shouldn't be possible for this to mismatch since we composed the character already
 
-            let glyphString = textStorage.attributedSubstring(from: characterRange)
+            let glyphString = textStorage.attributedSubstring(from: actualCharacterRange)
 
-            let font = glyphString.attribute(.font, at: 0, effectiveRange: nil) as? PlatformFont
-                ?? .systemFont(ofSize: PlatformFont.systemFontSize)
+            let font = glyphString.attribute(.font, at: 0, effectiveRange: nil) as! PlatformFont    // NSTextStorage always resolves a font.
 
             let baseline = font.descender
 
@@ -80,22 +91,18 @@ public struct PathText {
                                          baseline: baseline,
                                          rect: bounds.offsetBy(dx: origin.x, dy: origin.y))
 
-            positions.append(position)
-            characterIndex = NSMaxRange(characterRange)
+            characterIndex = NSMaxRange(actualCharacterRange)
+            return position
+        })
 
-
-        }
-        self.glyphPositions = positions
         updateRuns()
     }
 
     mutating private func updateRuns() {
         let tangents = path.getTangents(atLocations: glyphPositions.map {$0.rect.midX})
-        var runs: [Run] = []
-        for (tangent, position) in zip(tangents, glyphPositions) {
-            runs.append(Run(angle: Double(tangent.angle), point: tangent.point, position: position))
+        self.runs = zip(tangents, glyphPositions).map { tangent, position in
+            Run(angle: Double(tangent.angle), point: tangent.point, position: position)
         }
-        self.runs = runs
     }
 
     private struct Run: Identifiable {
@@ -112,9 +119,6 @@ public struct PathText {
 @available(iOS 13.0, *)
 extension PathText: View {
     public var body: some View {
-
-        // FIXME: include lineFragmentOrigin (but currently it's .zero)
-
         return ZStack {
             ForEach(runs) { run in
                 Text(verbatim: run.position.attributedString.string)
@@ -126,7 +130,6 @@ extension PathText: View {
                     .position(run.point)
             }
         }
-        .border(Color.red)
     }
 }
 
@@ -143,8 +146,12 @@ extension Text {
             case .foregroundColor:
                 result = result.foregroundColor(Color(value as! PlatformColor))
 
+            // A few things to ignore
+            case .init("NSOriginalFont"):   // Original font before substitution. We don't care about that.
+                break
+
             default:
-                print("Unknown attribute: \(key) = \(value)")
+                print("Unknown attribute: \(key) = \(value)")   // FIXME: Just for debugging.
                 break
             }
         }
@@ -152,18 +159,17 @@ extension Text {
     }
 }
 
-
 @available(iOS 13.0.0, *)
 struct PathText_Previews: PreviewProvider {
     static let text: NSAttributedString = {
-        let string = NSString("You can d\u{030a}isplay text along a curve, with bold, color, and big text.")
+        let string = NSString("You can d\u{030a}isplay tëxt along a cu\u{0327}rve, with bold, color, and big text.")
 
         let s = NSMutableAttributedString(string: string as String,
                                           attributes: [.font: UIFont.systemFont(ofSize: 48)])
 
-//        s.addAttributes([.font: UIFont.boldSystemFont(ofSize: 16)], range: string.range(of: "bold"))
-//        s.addAttributes([.foregroundColor: UIColor.red], range: string.range(of: "color"))
-//        s.addAttributes([.font: UIFont.systemFont(ofSize: 32)], range: string.range(of: "big text"))
+        s.addAttributes([.font: UIFont.boldSystemFont(ofSize: 16)], range: string.range(of: "bold"))
+        s.addAttributes([.foregroundColor: UIColor.red], range: string.range(of: "color"))
+        s.addAttributes([.font: UIFont.systemFont(ofSize: 32)], range: string.range(of: "big text"))
         return s
     }()
 
@@ -194,10 +200,12 @@ struct PathText_Previews: PreviewProvider {
         }
 
         return VStack {
-            Text("You can display text along a curve")
+            Text("x")
+            Text("Y͑ͩ̾ͭ̀̓͂oͯ͋ͭͬ̚u̩͐ ̖̙c̪̉ạ̽n ̫̫̳̙̻̩di̎́̓̾̅͊s̲̯̻̳͐̌̋̂̅͂ͅͅpla̺̼̰͚̣̦̣y̺̝͌ͦ ̂͋̓́͗̎̚t̟̩͕͉̐ͦ̎̍ẹ̭̺͓̳͔͈̄ͤͣ̐̑ͦ̀xͥͩ̓̈t͕̭̥͈ͣ̃̍͂̑ͅ a͖̗̿ͨl̉͑̊ͯ̿̆o͍̤̳͕n̫̥̓̾g̈́ a ͚̽c͔̫̪̰̳ͫ̽̀̍̚ur̞̬͎͍͈̙ͩͧ͑ͩ͒̆ve̪̠̼͖̩̤̲̐͗̒̃ͯ̅̽")// "You can display text along a curve")
                 .font(.system(size: 48))
-                .padding(.horizontal)
+                .padding()
                 .lineLimit(1)
+                .frame(minHeight: 200)
             ZStack {
                 PathText(text: text, path: path)
                 path.stroke(Color.blue, lineWidth: 2)
