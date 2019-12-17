@@ -48,16 +48,45 @@ public struct PathText {
     }
 
     mutating private func updatePositions() {
-        let line = CTLineCreateWithAttributedString(text)
+        let layoutManager = NSLayoutManager()
+        let textStorage = NSTextStorage(attributedString: text)
+        let textContainer = NSTextContainer()
+        layoutManager.addTextContainer(textContainer)
+        textStorage.addLayoutManager(layoutManager)
 
-        glyphPositions = line.glyphRuns.flatMap { run -> [GlyphPosition] in
-            let baseline = run.font.descender
-            return run.glyphCharacterMapping.map { (glyphRange, characterRange) in
-                GlyphPosition(attributedString: text.attributedSubstring(from: characterRange),
-                              baseline: baseline,
-                              rect: run.typographicFrame(glyphRange: glyphRange))
-            }
+        var positions: [GlyphPosition] = []
+
+        var characterIndex = 0
+
+        while characterIndex < textStorage.length {
+            let string = textStorage.string as NSString
+            let characterRange = string.rangeOfComposedCharacterSequence(at: characterIndex)
+            var actualCharacterRange = NSRange()
+            let glyphRange = layoutManager.glyphRange(forCharacterRange: characterRange, actualCharacterRange: &actualCharacterRange)
+            assert(characterRange == actualCharacterRange)  // It shouldn't be possible for this to mismatch since we composed the character already
+
+            let glyphString = textStorage.attributedSubstring(from: characterRange)
+
+            let font = glyphString.attribute(.font, at: 0, effectiveRange: nil) as? PlatformFont
+                ?? .systemFont(ofSize: PlatformFont.systemFontSize)
+
+            let baseline = font.descender
+
+            let line = CTLineCreateWithAttributedString(glyphString)
+            let origin = layoutManager.location(forGlyphAt: glyphRange.location)
+            let bounds = CTLineGetBoundsWithOptions(line, [])
+
+            let position = GlyphPosition(attributedString: glyphString,
+                                         baseline: baseline,
+                                         rect: CGRect(origin: origin, size: CGSize(width: bounds.width, height: bounds.height)))
+
+            print(position)
+            positions.append(position)
+            characterIndex = NSMaxRange(characterRange)
+
+
         }
+        self.glyphPositions = positions
         updateRuns()
     }
 
@@ -91,6 +120,7 @@ extension PathText: View {
             ForEach(runs) { run in
                 Text(verbatim: run.position.attributedString.string)
                     .font(.system(size: 48))
+                    .frame(width: run.position.rect.size.width, height: run.position.rect.size.height, alignment: .bottom)
                     .padding(EdgeInsets(top: -run.position.baseline, leading: 0, bottom: run.position.baseline, trailing: 0))
 //                    .border(Color.green)
                     .rotationEffect(.radians(run.angle), anchor: .bottom)
@@ -110,7 +140,7 @@ extension PathText: View {
 @available(iOS 13.0.0, *)
 struct PathText_Previews: PreviewProvider {
     static let text: NSAttributedString = {
-        let string = NSString("You can display text along a curve, with bold, color, and big text.")
+        let string = NSString("You can d\u{030a}isplay text along a curve, with bold, color, and big text.")
 
         let s = NSMutableAttributedString(string: string as String,
                                           attributes: [.font: UIFont.systemFont(ofSize: 48)])
@@ -234,10 +264,10 @@ struct PathText_Previews: PreviewProvider {
         }
 
         return VStack {
-            Text("X\u{030A}")
+            Text("ÅX̊") // "X\u{030A}")
                 .font(.system(size: 48))
             ZStack {
-                PathText(text: NSAttributedString(string: "X\u{030A}",
+                PathText(text: NSAttributedString(string: "ÅX̊Z",
                                                   attributes: [.font: UIFont.systemFont(ofSize: 48)]), path: path)
                 path.stroke(Color.blue, lineWidth: 2)
             }
@@ -245,12 +275,12 @@ struct PathText_Previews: PreviewProvider {
     }
     static var previews: some View {
         Group {
-//            CurveView()
-//            LineView()
-//            LinesView()
-//            LineAndCurveView()
-//            QuadCurveView()
-//            RoundedRectView()
+            CurveView()
+            LineView()
+            LinesView()
+            LineAndCurveView()
+            QuadCurveView()
+            RoundedRectView()
             TwoGlyphCharacter()
         }.previewLayout(.fixed(width: 700, height: 500))
     }
