@@ -80,8 +80,9 @@ public struct PathText {
             let glyphString = textStorage.attributedSubstring(from: actualCharacterRange)
 
             let font = glyphString.attribute(.font, at: 0, effectiveRange: nil) as! PlatformFont    // NSTextStorage always resolves a font.
+            let baselineOffset = glyphString.attribute(.baselineOffset, at: 0, effectiveRange: nil) as? CGFloat ?? 0
 
-            let baseline = font.descender
+            let baseline = font.descender + baselineOffset
 
             let line = CTLineCreateWithAttributedString(glyphString)
             let origin = layoutManager.location(forGlyphAt: glyphRange.location)
@@ -93,7 +94,7 @@ public struct PathText {
 
             characterIndex = NSMaxRange(actualCharacterRange)
             return position
-        })
+        }).sorted { (lhs, rhs) in lhs.rect.midX < rhs.rect.midX }
 
         updateRuns()
     }
@@ -123,8 +124,10 @@ extension PathText: View {
             ForEach(runs) { run in
                 Text(verbatim: run.position.attributedString.string)
                     .attributes(run.position.attributedString.attributes(at: 0, effectiveRange: nil))
+                    .shadow(run.position.attributedString.attribute(.shadow, at: 0, effectiveRange: nil) as? NSShadow)
                     .frame(width: run.position.rect.size.width, height: run.position.rect.size.height, alignment: .bottom)
                     .padding(EdgeInsets(top: -run.position.baseline, leading: 0, bottom: run.position.baseline, trailing: 0))
+//                    .border(Color.green)
                     .rotationEffect(.radians(run.angle), anchor: .bottom)
                     .offset(x: 0, y: (-run.position.rect.height / 2))
                     .position(run.point)
@@ -146,13 +149,47 @@ extension Text {
             case .foregroundColor:
                 result = result.foregroundColor(Color(value as! PlatformColor))
 
-            // A few things to ignore
-            case .init("NSOriginalFont"):   // Original font before substitution. We don't care about that.
+            case .baselineOffset:
+                result = result.baselineOffset(value as! CGFloat)
+
+            //
+            // Ignore for various reasons
+            //
+
+            // Ignore because layout already handles it
+            case .kern,
+                 .ligature,
+                 .writingDirection:
+                break
+
+            // Ingore because other methods already handle it
+            case .shadow:   // shadow(fromAttributes:)
+                break
+
+            // Ignore because they are unsupported by Text
+            case .expansion,    // Expansion is not fully supported; it'll act more like tracking
+            .link,
+            .obliqueness,
+            .strokeColor,
+            .strokeWidth,
+            .textEffect:
+                break
+
+            // Ignore because it would look bad if implemented
+            case .backgroundColor,
+                 .paragraphStyle,
+                 .strikethroughStyle,
+                 .strikethroughColor,
+                 .underlineStyle,
+                 .underlineColor:
+                break
+
+            // Ignore because it's unneeded information
+            case .init("NSOriginalFont"):   // Original font before substitution.
                 break
 
             default:
                 print("Unknown attribute: \(key) = \(value)")   // FIXME: Just for debugging.
-                break
             }
         }
         return result
@@ -160,16 +197,43 @@ extension Text {
 }
 
 @available(iOS 13.0.0, *)
+extension View {
+    func shadow(_ shadow: NSShadow?) -> some View {
+        guard let shadow = shadow else { return self.shadow(radius: 0) }
+
+        let radius = shadow.shadowBlurRadius
+        let x = shadow.shadowOffset.width
+        let y = shadow.shadowOffset.height
+
+        if let color = (shadow.shadowColor as? PlatformColor).map(Color.init) {
+            return self.shadow(color: color, radius: radius, x: x, y: y)
+        } else {
+            return self.shadow(radius: radius, x: x, y: y)
+        }
+    }
+}
+
+@available(iOS 13.0.0, *)
 struct PathText_Previews: PreviewProvider {
     static let text: NSAttributedString = {
-        let string = NSString("You can d\u{030a}isplay tëxt along a cu\u{0327}rve, with bold, color, and big text.")
+        let string = NSString("You can d\u{030a}isplay العربية tëxt along a cu\u{0327}rve, with bold, color, and big text.")
 
         let s = NSMutableAttributedString(string: string as String,
                                           attributes: [.font: UIFont.systemFont(ofSize: 48)])
 
-        s.addAttributes([.font: UIFont.boldSystemFont(ofSize: 16)], range: string.range(of: "bold"))
-        s.addAttributes([.foregroundColor: UIColor.red], range: string.range(of: "color"))
-        s.addAttributes([.font: UIFont.systemFont(ofSize: 32)], range: string.range(of: "big text"))
+        s.addAttribute(.font, value: UIFont.boldSystemFont(ofSize: 48), range: string.range(of: "bold"))
+        s.addAttribute(.foregroundColor, value: UIColor.red, range: string.range(of: "color"))
+        s.addAttribute(.font, value: UIFont.systemFont(ofSize: 32), range: string.range(of: "big text"))
+        s.addAttribute(.baselineOffset, value: 20, range: string.range(of: "along"))
+
+        let shadow = NSShadow()
+        shadow.shadowBlurRadius = 5
+        shadow.shadowColor = UIColor.green
+        shadow.shadowOffset = CGSize(width: 5, height: 10)
+        s.addAttribute(.shadow, value: shadow, range: string.range(of: "can"))
+
+        s.addAttribute(.writingDirection, value: [3], range: string.range(of: "You"))
+
         return s
     }()
 
@@ -200,12 +264,10 @@ struct PathText_Previews: PreviewProvider {
         }
 
         return VStack {
-            Text("x")
-            Text("Y͑ͩ̾ͭ̀̓͂oͯ͋ͭͬ̚u̩͐ ̖̙c̪̉ạ̽n ̫̫̳̙̻̩di̎́̓̾̅͊s̲̯̻̳͐̌̋̂̅͂ͅͅpla̺̼̰͚̣̦̣y̺̝͌ͦ ̂͋̓́͗̎̚t̟̩͕͉̐ͦ̎̍ẹ̭̺͓̳͔͈̄ͤͣ̐̑ͦ̀xͥͩ̓̈t͕̭̥͈ͣ̃̍͂̑ͅ a͖̗̿ͨl̉͑̊ͯ̿̆o͍̤̳͕n̫̥̓̾g̈́ a ͚̽c͔̫̪̰̳ͫ̽̀̍̚ur̞̬͎͍͈̙ͩͧ͑ͩ͒̆ve̪̠̼͖̩̤̲̐͗̒̃ͯ̅̽")// "You can display text along a curve")
+            Text(verbatim: text.string)
                 .font(.system(size: 48))
                 .padding()
                 .lineLimit(1)
-                .frame(minHeight: 200)
             ZStack {
                 PathText(text: text, path: path)
                 path.stroke(Color.blue, lineWidth: 2)
