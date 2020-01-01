@@ -75,28 +75,22 @@ public class PathTextView: UIView {
     private struct GlyphLocation {
         var glyphRange: CFRange
         var anchor: CGFloat // Center location
-        var tangent: PathTangent?
     }
 
     private struct GlyphRun {
         var run: CTRun
         var locations: [GlyphLocation]
+        var tangents: [PathTangent] = []
 
-        mutating func updatePositions(withTangents tangents: inout TangentGenerator) {
-            locations = locations.map {
-                var location = $0
-                location.tangent = tangents.getTangent(at: location.anchor)
-                return location
-            }
+        mutating func updatePositions(withTangents tangentGenerator: inout TangentGenerator) {
+            self.tangents = locations.compactMap { tangentGenerator.getTangent(at: $0.anchor) }
         }
 
         func draw(in context: CGContext) {
             let baseTextMatrix = context.textMatrix
             defer { context.textMatrix = baseTextMatrix }
 
-            for location in locations {
-                guard let tangent = location.tangent else { break }
-
+            for (location, tangent) in zip(locations, tangents) {
                 context.saveGState()
                 defer { context.restoreGState() }
 
