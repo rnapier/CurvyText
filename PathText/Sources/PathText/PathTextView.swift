@@ -82,9 +82,36 @@ public class PathTextView: UIView {
     private struct GlyphRun {
         var run: CTRun
         var locations: [GlyphLocation]
+
         mutating func updatePositions(withTangents tangents: inout TangentGenerator) {
-            for var location in locations {
+            locations = locations.map {
+                var location = $0
                 location.tangent = tangents.getTangent(at: location.anchor)
+                return location
+            }
+        }
+
+        func draw(in context: CGContext) {
+            let baseTextMatrix = context.textMatrix
+            defer { context.textMatrix = baseTextMatrix }
+
+            for (glyphIndex, location) in locations.enumerated() {
+                guard let tangent = location.tangent else { break }
+
+                context.saveGState()
+                defer { context.restoreGState() }
+
+                let tangentPoint = tangent.point
+                let angle = tangent.angle
+
+                // FIXME: Apply other attributes
+
+                context.translateBy(x: tangentPoint.x, y: tangentPoint.y)
+                context.rotate(by: angle)
+
+                context.textMatrix = baseTextMatrix.translatedBy(x: -location.anchor, y: 0)
+
+                CTRunDraw(run, context, CFRange(location: glyphIndex, length: 1))
             }
         }
     }
@@ -128,8 +155,10 @@ public class PathTextView: UIView {
 
     private func updateGlyphPositions() {
         var tangents = TangentGenerator(path: path)
-        for var glyphRun in glyphRuns {
+        glyphRuns = glyphRuns.map {
+            var glyphRun = $0
             glyphRun.updatePositions(withTangents: &tangents)
+            return glyphRun
         }
         setNeedsDisplay()
     }
@@ -145,28 +174,10 @@ public class PathTextView: UIView {
         let context = UIGraphicsGetCurrentContext()!
 
         // FIXME: Check if flip is needed (macos)
-        let baseTextMatrix = CGAffineTransform(translationX: 0, y:0).scaledBy(x: 1, y: -1)
+        context.textMatrix = CGAffineTransform(translationX: 0, y:0).scaledBy(x: 1, y: -1)
 
         for run in glyphRuns {
-
-            for (glyphIndex, location) in run.locations.enumerated() {
-                guard let tangent = location.tangent else { break }
-
-                context.saveGState()
-                defer { context.restoreGState() }
-
-                let tangentPoint = tangent.point
-                let angle = tangent.angle
-
-                // FIXME: Apply other attributes
-
-                context.translateBy(x: tangentPoint.x, y: tangentPoint.y)
-                context.rotate(by: angle)
-
-                context.textMatrix = baseTextMatrix.translatedBy(x: -location.anchor, y: 0)
-
-                CTRunDraw(run.run, context, CFRange(location: glyphIndex, length: 1))
-            }
+            run.draw(in: context)
         }
     }
 }
