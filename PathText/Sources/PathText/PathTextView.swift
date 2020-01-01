@@ -136,44 +136,41 @@ public class PathTextView: UIView {
         let tangents = path.getTangents(atLocations: glyphRuns.flatMap { $0.locations.map { $0.anchor } })
 
         let context = UIGraphicsGetCurrentContext()!
-        context.saveGState()
-
-        context.textMatrix = CGAffineTransform(translationX: 0, y:0).scaledBy(x: 1, y: -1)
 
         var tangentIndex = 0   // FIXME
+
+        // FIXME: Check if flip is needed (macos)
+        let baseTextMatrix = CGAffineTransform(translationX: 0, y:0).scaledBy(x: 1, y: -1)
 
         for run in glyphRuns {
 
             // FIXME: inefficient; rescans from start for each run
 
-            for location in run.locations {
+            for (glyphIndex, location) in run.locations.enumerated() {
                 guard tangentIndex < tangents.count else { break }  // HACK for truncation
+
                 context.saveGState()
-                let textMatrix = context.textMatrix
+                defer {
+                    context.restoreGState()
+                }
 
                 let tangent = tangents[tangentIndex]
 
                 let tangentPoint = tangent.point
                 let angle = tangent.angle
 
-                let attributes = CTRunGetAttributes(run.run) as! [CFString: Any]
-                let font = attributes[kCTFontAttributeName] as! CTFont
-
                 // FIXME: Apply other attributes
 
                 context.translateBy(x: tangentPoint.x, y: tangentPoint.y)
                 context.rotate(by: angle)
 
-                var glyph = location.glyph
-                var position = CGPoint(x: -location.width / 2, y: 0)
+                context.textMatrix = baseTextMatrix.translatedBy(x: -location.anchor, y: 0)
 
-                CTFontDrawGlyphs(font, &glyph, &position, 1, context)
-                context.textMatrix = textMatrix
-                context.restoreGState()
+                CTRunDraw(run.run, context, CFRange(location: glyphIndex, length: 1))
+
                 tangentIndex += 1
             }
         }
-        context.restoreGState()
     }
 }
 
@@ -187,14 +184,26 @@ extension CGPoint {
 
 @available(iOS 13.0.0, *)
 struct PathText_Previews: PreviewProvider {
+//    static let text: NSAttributedString = {
+//        let string = NSString("You can display text along a curve, with bold, color, and big text.")
+//
+//        let s = NSMutableAttributedString(string: string as String,
+//                                          attributes: [.font: UIFont.systemFont(ofSize: 16)])
+//
+//        s.addAttributes([.font: UIFont.boldSystemFont(ofSize: 16)], range: string.range(of: "bold"))
+//        s.addAttributes([.foregroundColor: UIColor.red], range: string.range(of: "color"))
+//        s.addAttributes([.font: UIFont.systemFont(ofSize: 32)], range: string.range(of: "big text"))
+//        return s
+//    }()
+
     static let text: NSAttributedString = {
         let string = NSString("You can d\u{030a}isplay العربية tëxt along a cu\u{0327}rve, with bold, color, and big text.")
 
         let s = NSMutableAttributedString(string: string as String,
                                           attributes: [.font: UIFont.systemFont(ofSize: 48)])
 
-        s.addAttribute(.font, value: UIFont.boldSystemFont(ofSize: 48), range: string.range(of: "bold"))
-        s.addAttribute(.foregroundColor, value: UIColor.red, range: string.range(of: "color"))
+        s.addAttribute(.font, value: UIFont.boldSystemFont(ofSize: 48), range: string.range(of: "tëxt"))
+        s.addAttribute(.foregroundColor, value: UIColor.red, range: string.range(of: "d\u{030a}isplay"))
         s.addAttribute(.font, value: UIFont.systemFont(ofSize: 32), range: string.range(of: "big text"))
         s.addAttribute(.baselineOffset, value: 20, range: string.range(of: "along"))
 
