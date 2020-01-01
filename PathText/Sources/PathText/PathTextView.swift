@@ -72,43 +72,6 @@ public class PathTextView: UIView {
         }
     }
 
-    private struct GlyphLocation {
-        var glyphRange: CFRange
-        var anchor: CGFloat // Center location
-    }
-
-    private struct GlyphRun {
-        var run: CTRun
-        var locations: [GlyphLocation]
-        var tangents: [PathTangent] = []
-
-        mutating func updatePositions(withTangents tangentGenerator: inout TangentGenerator) {
-            self.tangents = locations.compactMap { tangentGenerator.getTangent(at: $0.anchor) }
-        }
-
-        func draw(in context: CGContext) {
-            let baseTextMatrix = context.textMatrix
-            defer { context.textMatrix = baseTextMatrix }
-
-            for (location, tangent) in zip(locations, tangents) {
-                context.saveGState()
-                defer { context.restoreGState() }
-
-                let tangentPoint = tangent.point
-                let angle = tangent.angle
-
-                // FIXME: Apply other attributes
-
-                context.translateBy(x: tangentPoint.x, y: tangentPoint.y)
-                context.rotate(by: angle)
-
-                context.textMatrix = baseTextMatrix.translatedBy(x: -location.anchor, y: 0)
-
-                CTRunDraw(run, context, location.glyphRange)
-            }
-        }
-    }
-
     private var glyphRuns: [GlyphRun] = []
 
     private func updateGlyphRuns() {
