@@ -60,56 +60,22 @@ public struct PathText: UIViewRepresentable {
  */
 public class PathTextView: UIView {
 
-    public var text: NSAttributedString = NSAttributedString() {
-        didSet {
-            updateGlyphRuns()
+    private var layoutManager = PathTextLayoutManager()
+
+    public var text: NSAttributedString {
+        get { layoutManager.text }
+        set {
+            layoutManager.text = newValue
+            setNeedsDisplay()
         }
     }
 
-    public var path: CGPath = CGMutablePath() {
-        didSet {
-            updateGlyphPositions()
+    public var path: CGPath {
+        get { layoutManager.path }
+        set {
+            layoutManager.path = newValue
+            setNeedsDisplay()
         }
-    }
-
-    private var glyphRuns: [GlyphRun] = []
-
-    private func updateGlyphRuns() {
-        let line = CTLineCreateWithAttributedString(text)
-        let runs = CTLineGetGlyphRuns(line) as! [CTRun]
-
-        glyphRuns = runs.map { run in
-            let glyphCount = CTRunGetGlyphCount(run)
-
-            let positions: [CGPoint] = Array(unsafeUninitializedCapacity: glyphCount) { (buffer, initialized) in
-                CTRunGetPositions(run, CFRange(), buffer.baseAddress!)
-                initialized = glyphCount
-            }
-
-            let widths: [CGFloat] = (0..<glyphCount).map {
-                CGFloat(CTRunGetTypographicBounds(run, CFRange(location: $0, length: 1), nil, nil, nil))
-            }
-
-            let anchors = zip(positions, widths).map { $0.x + $1 / 2 }
-
-            let locations = anchors.enumerated()
-                .map { GlyphLocation(glyphRange: CFRange(location: $0, length: 1), anchor: $1) }
-                .sorted { $0.anchor < $1.anchor }
-
-            return GlyphRun(run: run, locations: locations)
-        }
-
-        updateGlyphPositions()
-    }
-
-    private func updateGlyphPositions() {
-        var tangents = TangentGenerator(path: path)
-        glyphRuns = glyphRuns.map {
-            var glyphRun = $0
-            glyphRun.updatePositions(withTangents: &tangents)
-            return glyphRun
-        }
-        setNeedsDisplay()
     }
 
     public init() {
@@ -122,12 +88,7 @@ public class PathTextView: UIView {
     public override func draw(_ rect: CGRect) {
         let context = UIGraphicsGetCurrentContext()!
 
-        // FIXME: Check if flip is needed (macos)
-        context.textMatrix = CGAffineTransform(translationX: 0, y:0).scaledBy(x: 1, y: -1)
-
-        for run in glyphRuns {
-            run.draw(in: context)
-        }
+        layoutManager.draw(in: context)
     }
 }
 
