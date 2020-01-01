@@ -99,22 +99,25 @@ struct PathTextLayoutManager {
             return GlyphRun(run: run, locations: locations)
         }
 
-        updateGlyphPositions()
+        needsGlyphGeneration = false
     }
 
     private mutating func updateGlyphPositions() {
+        if needsGlyphGeneration { updateGlyphRuns() }
         var tangents = TangentGenerator(path: path)
         glyphRuns = glyphRuns.map {
             var glyphRun = $0
             glyphRun.updatePositions(withTangents: &tangents)
             return glyphRun
         }
+
+        needsLayout = false
     }
 
     public mutating func draw(in context: CGContext) {
-        // FIXME: Check if needed
-        updateGlyphRuns()
-        updateGlyphPositions()
+        if needsLayout {
+            updateGlyphPositions()
+        }
 
         // FIXME: Check if flip is needed (macos)
         context.textMatrix = CGAffineTransform(translationX: 0, y:0).scaledBy(x: 1, y: -1)

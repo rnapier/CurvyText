@@ -87,7 +87,6 @@ public class PathTextView: UIView {
 
     public override func draw(_ rect: CGRect) {
         let context = UIGraphicsGetCurrentContext()!
-
         layoutManager.draw(in: context)
     }
 }
