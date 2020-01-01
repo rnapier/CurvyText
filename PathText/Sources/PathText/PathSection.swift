@@ -43,6 +43,14 @@ extension PathSection {
     }
 }
 
+private extension CGPoint {
+    func distance(to other: CGPoint) -> CGFloat {
+        let dx = x - other.x
+        let dy = y - other.y
+        return hypot(dx, dy)
+    }
+}
+
 struct PathTangent: Equatable {
     var t: CGFloat
     var point: CGPoint

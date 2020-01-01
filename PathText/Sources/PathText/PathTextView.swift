@@ -63,14 +63,12 @@ public class PathTextView: UIView {
     public var text: NSAttributedString = NSAttributedString() {
         didSet {
             updateGlyphRuns()
-            setNeedsDisplay()
         }
     }
 
     public var path: CGPath = CGMutablePath() {
         didSet {
-            updateGlyphPositions()   // FIXME: only break down string
-            setNeedsDisplay()
+            updateGlyphPositions()
         }
     }
 
@@ -78,11 +76,17 @@ public class PathTextView: UIView {
         var glyph: CGGlyph
         var anchor: CGFloat // Center, bottom
         var width: CGFloat
+        var tangent: PathTangent?
     }
 
     private struct GlyphRun {
         var run: CTRun
         var locations: [GlyphLocation]
+        mutating func updatePositions(withTangents tangents: inout TangentGenerator) {
+            for var location in locations {
+                location.tangent = tangents.getTangent(at: location.anchor)
+            }
+        }
     }
 
     private var glyphRuns: [GlyphRun] = []
@@ -118,10 +122,16 @@ public class PathTextView: UIView {
 
             return GlyphRun(run: run, locations: locations)
         }
+
+        updateGlyphPositions()
     }
 
     private func updateGlyphPositions() {
-        // FIXME: Move from draw to here
+        var tangents = TangentGenerator(path: path)
+        for var glyphRun in glyphRuns {
+            glyphRun.updatePositions(withTangents: &tangents)
+        }
+        setNeedsDisplay()
     }
 
     public init() {
@@ -132,25 +142,18 @@ public class PathTextView: UIView {
     required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
 
     public override func draw(_ rect: CGRect) {
-        // FIXME: Move calculations to updateGlyphPositions
-
         let context = UIGraphicsGetCurrentContext()!
 
         // FIXME: Check if flip is needed (macos)
         let baseTextMatrix = CGAffineTransform(translationX: 0, y:0).scaledBy(x: 1, y: -1)
 
-        // FIXME: Move calculations to updateGlyphPositions
-        var tangents = TangentGenerator(path: path)
-
         for run in glyphRuns {
 
             for (glyphIndex, location) in run.locations.enumerated() {
-                guard let tangent = tangents.getTangent(at: location.anchor) else { break }
+                guard let tangent = location.tangent else { break }
 
                 context.saveGState()
-                defer {
-                    context.restoreGState()
-                }
+                defer { context.restoreGState() }
 
                 let tangentPoint = tangent.point
                 let angle = tangent.angle
@@ -165,14 +168,6 @@ public class PathTextView: UIView {
                 CTRunDraw(run.run, context, CFRange(location: glyphIndex, length: 1))
             }
         }
-    }
-}
-
-extension CGPoint {
-    func distance(to other: CGPoint) -> CGFloat {
-        let dx = x - other.x
-        let dy = y - other.y
-        return hypot(dx, dy)
     }
 }
 
