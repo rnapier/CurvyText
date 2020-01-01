@@ -73,10 +73,10 @@ public class PathTextView: UIView {
     }
 
     private struct GlyphLocation {
-        var glyph: CGGlyph
+        var glyphIndex: CFIndex
         var anchor: CGFloat // Center, bottom
-        var width: CGFloat
         var tangent: PathTangent?
+
     }
 
     private struct GlyphRun {
@@ -95,7 +95,7 @@ public class PathTextView: UIView {
             let baseTextMatrix = context.textMatrix
             defer { context.textMatrix = baseTextMatrix }
 
-            for (glyphIndex, location) in locations.enumerated() {
+            for location in locations {
                 guard let tangent = location.tangent else { break }
 
                 context.saveGState()
@@ -111,7 +111,7 @@ public class PathTextView: UIView {
 
                 context.textMatrix = baseTextMatrix.translatedBy(x: -location.anchor, y: 0)
 
-                CTRunDraw(run, context, CFRange(location: glyphIndex, length: 1))
+                CTRunDraw(run, context, CFRange(location: location.glyphIndex, length: 1))
             }
         }
     }
@@ -126,11 +126,6 @@ public class PathTextView: UIView {
         glyphRuns = runs.map { run in
             let glyphCount = CTRunGetGlyphCount(run)
 
-            let glyphs: [CGGlyph] = Array(unsafeUninitializedCapacity: glyphCount) { (buffer, initialized) in
-                CTRunGetGlyphs(run, CFRange(), buffer.baseAddress!)
-                initialized = glyphCount
-            }
-
             let positions: [CGPoint] = Array(unsafeUninitializedCapacity: glyphCount) { (buffer, initialized) in
                 CTRunGetPositions(run, CFRange(), buffer.baseAddress!)
                 initialized = glyphCount
@@ -142,9 +137,8 @@ public class PathTextView: UIView {
 
             let anchors = zip(positions, widths).map { $0.x + $1 / 2 }
 
-            // FIXME: Very ugly
-            let locations = zip(glyphs, zip(anchors, widths))
-                .map { GlyphLocation(glyph: $0, anchor: $1.0, width: $1.1) }
+            let locations = anchors.enumerated()
+                .map { GlyphLocation(glyphIndex: $0, anchor: $1) }
                 .sorted { (lhs, rhs) in lhs.anchor < rhs.anchor }
 
             return GlyphRun(run: run, locations: locations)
@@ -197,7 +191,7 @@ struct PathText_Previews: PreviewProvider {
 //    }()
 
     static let text: NSAttributedString = {
-        let string = NSString("You can d\u{030a}isplay العربية tëxt along a cu\u{0327}rve, with bold, color, and big text.")
+        let string = NSString("mmii can d\u{030a}isplay العربية tëxt along a cu\u{0327}rve, with bold, color, and big text.")
 
         let s = NSMutableAttributedString(string: string as String,
                                           attributes: [.font: UIFont.systemFont(ofSize: 48)])
@@ -213,7 +207,7 @@ struct PathText_Previews: PreviewProvider {
         shadow.shadowOffset = CGSize(width: 5, height: 10)
         s.addAttribute(.shadow, value: shadow, range: string.range(of: "can"))
 
-        s.addAttribute(.writingDirection, value: [3], range: string.range(of: "You"))
+        s.addAttribute(.writingDirection, value: [3], range: string.range(of: "mmii"))
 
         return s
     }()
