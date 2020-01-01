@@ -73,10 +73,9 @@ public class PathTextView: UIView {
     }
 
     private struct GlyphLocation {
-        var glyphIndex: CFIndex
-        var anchor: CGFloat // Center, bottom
+        var glyphRange: CFRange
+        var anchor: CGFloat // Center location
         var tangent: PathTangent?
-
     }
 
     private struct GlyphRun {
@@ -111,7 +110,7 @@ public class PathTextView: UIView {
 
                 context.textMatrix = baseTextMatrix.translatedBy(x: -location.anchor, y: 0)
 
-                CTRunDraw(run, context, CFRange(location: location.glyphIndex, length: 1))
+                CTRunDraw(run, context, location.glyphRange)
             }
         }
     }
@@ -119,7 +118,6 @@ public class PathTextView: UIView {
     private var glyphRuns: [GlyphRun] = []
 
     private func updateGlyphRuns() {
-        // FIXME: Reuse
         let line = CTLineCreateWithAttributedString(text)
         let runs = CTLineGetGlyphRuns(line) as! [CTRun]
 
@@ -138,8 +136,8 @@ public class PathTextView: UIView {
             let anchors = zip(positions, widths).map { $0.x + $1 / 2 }
 
             let locations = anchors.enumerated()
-                .map { GlyphLocation(glyphIndex: $0, anchor: $1) }
-                .sorted { (lhs, rhs) in lhs.anchor < rhs.anchor }
+                .map { GlyphLocation(glyphRange: CFRange(location: $0, length: 1), anchor: $1) }
+                .sorted { $0.anchor < $1.anchor }
 
             return GlyphRun(run: run, locations: locations)
         }
