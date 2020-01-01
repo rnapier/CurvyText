@@ -17,27 +17,28 @@ protocol PathSection {
 extension PathSection {
     // Default impl
     func nextTangent(linearDistance: CGFloat, after lastTangent: PathTangent) -> NextTangent {
-        // Simplistic routine to find the t along Bezier that is
-        // a linear distance away from a previous tangent.
+        // Simplistic routine to find the t along Bezier that is a linear distance away from a previous tangent.
         // This routine just walks forward, accumulating Euclidean approximations until it finds
         // a point at least linearDistance away. Good optimizations here would reduce the number
         // of guesses, but this is tricky since if we go too far out, the
         // curve might loop back on leading to incorrect results. Tuning
         // kStep is good start.
-        let point = lastTangent.point
-
         let step: CGFloat = 0.001 // 0.0001 - 0.001 work well
+        var lastTangent = lastTangent
+
         var approximateLinearDistance: CGFloat = 0
-        var tangent = lastTangent
-        while approximateLinearDistance <= linearDistance && tangent.t < 1.0 {
-            tangent = getTangent(t: tangent.t + step)
-            approximateLinearDistance = point.distance(to: tangent.point) // FIXME: Inefficient?
+
+        var nextTangent = lastTangent
+        while approximateLinearDistance <= linearDistance && nextTangent.t < 1.0 {
+            lastTangent = nextTangent
+            nextTangent = getTangent(t: nextTangent.t + step)
+            approximateLinearDistance += lastTangent.point.distance(to: nextTangent.point)
         }
 
-        if tangent.t >= 1.0 {
+        if nextTangent.t >= 1.0 {
             return .insufficient(remainingLinearDistance: approximateLinearDistance)
         } else {
-            return .found(tangent)
+            return .found(nextTangent)
         }
     }
 }
@@ -117,22 +118,16 @@ extension CGPath {
     func getTangents(atLocations locations: [CGFloat]) -> [PathTangent] {
         assert(locations == locations.sorted())
 
-        var tangents: [PathTangent] = []
-
         var sections = self.sections()[...]
+
+        var tangents: [PathTangent] = []
         var locations = locations[...]
 
         var lastLocation: CGFloat = 0.0
-        var lastTangent: PathTangent?
+        var lastTangent: PathTangent? = nil
 
         while let location = locations.first, let section = sections.first  {
             let currentTangent = lastTangent ?? section.getTangent(t: 0)
-
-            guard location != lastLocation else {
-                tangents.append(currentTangent)
-                locations = locations.dropFirst()
-                continue
-            }
 
             let linearDistance = location - lastLocation
 
@@ -144,9 +139,9 @@ extension CGPath {
                 lastLocation = location
                 locations = locations.dropFirst()
 
-            case .insufficient(remainingLinearDistance: let remaining):
+            case let .insufficient(remainingLinearDistance: remain):
+                lastLocation += remain
                 lastTangent = nil
-                lastLocation = location + remaining
                 sections = sections.dropFirst()
             }
         }

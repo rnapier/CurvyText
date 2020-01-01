@@ -6,7 +6,20 @@
 //  Copyright © 2019 Rob Napier. All rights reserved.
 //
 
+#if canImport(SwiftUI)
 import SwiftUI
+#endif
+
+#if canImport(UIKit)
+import UIKit
+typealias PlatformFont = UIFont
+typealias PlatformColor = UIColor
+#elseif canImport(AppKit)
+typealias PlatformFont = NSFont
+typealias PlatformColor = NSColor
+#else
+#error("Unsupported platform")
+#endif
 
 // Terminology:
 //     t: Value from 0 to 1, where 0 is the starting point, and 1 is the final point.
@@ -49,34 +62,69 @@ public class PathTextView: UIView {
 
     public var path: CGPath = CGMutablePath() {
         didSet {
+            updateGlyphRuns()   // FIXME: only break down string
             setNeedsDisplay()
         }
     }
 
-    public var text: NSAttributedString {
-        get { textStorage }
-        set {
-            textStorage.setAttributedString(newValue)
-            locations = (0..<layoutManager.numberOfGlyphs).map { [layoutManager] glyphIndex in
-                layoutManager.location(forGlyphAt: glyphIndex)
-            }
-
-            lineFragmentOrigin = layoutManager
-                .lineFragmentRect(forGlyphAt: 0, effectiveRange: nil)
-                .origin
+    public var text: NSAttributedString = NSAttributedString() {
+        didSet {
+            updateGlyphPositions()
+            setNeedsDisplay()
         }
     }
 
-    private let layoutManager = NSLayoutManager()
-    private let textStorage = NSTextStorage()
-    private let textContainer = NSTextContainer()
+    private struct GlyphLocation {
+        var glyph: CGGlyph
+        var anchor: CGFloat // Center, bottom
+        var width: CGFloat
+    }
 
-    private var locations: [CGPoint] = []
-    private var lineFragmentOrigin = CGPoint.zero
+    private struct GlyphRun {
+        var run: CTRun
+        var locations: [GlyphLocation]
+    }
+
+    private var glyphRuns: [GlyphRun] = []
+
+    private func updateGlyphRuns() {
+        // FIXME: Reuse
+        let line = CTLineCreateWithAttributedString(text)
+        let runs = CTLineGetGlyphRuns(line) as! [CTRun]
+
+        glyphRuns = runs.map { run in
+            let glyphCount = CTRunGetGlyphCount(run)
+
+            let glyphs: [CGGlyph] = Array(unsafeUninitializedCapacity: glyphCount) { (buffer, initialized) in
+                CTRunGetGlyphs(run, CFRange(), buffer.baseAddress!)
+                initialized = glyphCount
+            }
+
+            let positions: [CGPoint] = Array(unsafeUninitializedCapacity: glyphCount) { (buffer, initialized) in
+                CTRunGetPositions(run, CFRange(), buffer.baseAddress!)
+                initialized = glyphCount
+            }
+
+            let widths: [CGFloat] = (0..<glyphCount).map {
+                CGFloat(CTRunGetTypographicBounds(run, CFRange(location: $0, length: 1), nil, nil, nil))
+            }
+
+            let anchors = zip(positions, widths).map { $0.x + $1 / 2 }
+
+            // FIXME: Very ugly
+            let locations = zip(glyphs, zip(anchors, widths))
+                .map { GlyphLocation(glyph: $0, anchor: $1.0, width: $1.1) }
+                .sorted { (lhs, rhs) in lhs.anchor < rhs.anchor }
+
+            return GlyphRun(run: run, locations: locations)
+        }
+    }
+
+    private func updateGlyphPositions() {
+        // FIXME: Move from draw to here
+    }
 
     public init() {
-        layoutManager.addTextContainer(textContainer)
-        textStorage.addLayoutManager(layoutManager)
         super.init(frame: .zero)
         backgroundColor = .clear
     }
@@ -84,30 +132,48 @@ public class PathTextView: UIView {
     required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
 
     public override func draw(_ rect: CGRect) {
-
-        let tangents = path.getTangents(atLocations: locations.map { $0.x })
+        // FIXME: Move calculations to updateGlyphPositions
+        let tangents = path.getTangents(atLocations: glyphRuns.flatMap { $0.locations.map { $0.anchor } })
 
         let context = UIGraphicsGetCurrentContext()!
+        context.saveGState()
 
-        for (index, (tangent, location)) in zip(tangents, locations).enumerated() {
-            context.saveGState()
+        context.textMatrix = CGAffineTransform(translationX: 0, y:0).scaledBy(x: 1, y: -1)
 
-            let glyphPoint = tangent.point
-            let angle = tangent.angle
+        var tangentIndex = 0   // FIXME
 
-            context.translateBy(x: glyphPoint.x, y: glyphPoint.y)
-            context.rotate(by: angle)
+        for run in glyphRuns {
 
-            // The "at:" in drawGlyphs is the origin of the line fragment. We've already adjusted the
-            // context, so take that back out.
-            let adjustedOrigin = CGPoint(x: -(lineFragmentOrigin.x + location.x),
-                                         y: -(lineFragmentOrigin.y + location.y))
+            // FIXME: inefficient; rescans from start for each run
 
-            layoutManager.drawGlyphs(forGlyphRange: NSRange(location: index, length: 1),
-                                     at: adjustedOrigin)
+            for location in run.locations {
+                guard tangentIndex < tangents.count else { break }  // HACK for truncation
+                context.saveGState()
+                let textMatrix = context.textMatrix
 
-            context.restoreGState()
+                let tangent = tangents[tangentIndex]
+
+                let tangentPoint = tangent.point
+                let angle = tangent.angle
+
+                let attributes = CTRunGetAttributes(run.run) as! [CFString: Any]
+                let font = attributes[kCTFontAttributeName] as! CTFont
+
+                // FIXME: Apply other attributes
+
+                context.translateBy(x: tangentPoint.x, y: tangentPoint.y)
+                context.rotate(by: angle)
+
+                var glyph = location.glyph
+                var position = CGPoint(x: -location.width / 2, y: 0)
+
+                CTFontDrawGlyphs(font, &glyph, &position, 1, context)
+                context.textMatrix = textMatrix
+                context.restoreGState()
+                tangentIndex += 1
+            }
         }
+        context.restoreGState()
     }
 }
 
@@ -156,7 +222,10 @@ struct PathText_Previews: PreviewProvider {
             $0.addLine(to: P1)
         }
 
-        return PathText(text: text, path: path)
+        return ZStack {
+            PathText(text: text, path: path)
+            path.stroke(Color.blue, lineWidth: 2)
+        }
     }
 
     static func LinesView() -> some View {
