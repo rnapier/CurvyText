@@ -133,28 +133,24 @@ public class PathTextView: UIView {
 
     public override func draw(_ rect: CGRect) {
         // FIXME: Move calculations to updateGlyphPositions
-        let tangents = path.getTangents(atLocations: glyphRuns.flatMap { $0.locations.map { $0.anchor } })
 
         let context = UIGraphicsGetCurrentContext()!
-
-        var tangentIndex = 0   // FIXME
 
         // FIXME: Check if flip is needed (macos)
         let baseTextMatrix = CGAffineTransform(translationX: 0, y:0).scaledBy(x: 1, y: -1)
 
+        // FIXME: Move calculations to updateGlyphPositions
+        var tangents = TangentGenerator(path: path)
+
         for run in glyphRuns {
 
-            // FIXME: inefficient; rescans from start for each run
-
             for (glyphIndex, location) in run.locations.enumerated() {
-                guard tangentIndex < tangents.count else { break }  // HACK for truncation
+                guard let tangent = tangents.getTangent(at: location.anchor) else { break }
 
                 context.saveGState()
                 defer {
                     context.restoreGState()
                 }
-
-                let tangent = tangents[tangentIndex]
 
                 let tangentPoint = tangent.point
                 let angle = tangent.angle
@@ -167,8 +163,6 @@ public class PathTextView: UIView {
                 context.textMatrix = baseTextMatrix.translatedBy(x: -location.anchor, y: 0)
 
                 CTRunDraw(run.run, context, CFRange(location: glyphIndex, length: 1))
-
-                tangentIndex += 1
             }
         }
     }

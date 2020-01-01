@@ -2,6 +2,15 @@ import XCTest
 import SwiftUI
 @testable import PathText
 
+func AssertPathTangentsEqual(_ expression1: [PathTangent], _ expression2: [PathTangent]) {
+    for (tangent1, tangent2) in zip(expression1, expression2) {
+        XCTAssertEqual(tangent1.t, tangent2.t, accuracy: 0.01)
+        XCTAssertEqual(tangent1.angle, tangent2.angle, accuracy: 0.01)
+        XCTAssertEqual(tangent1.point.x, tangent2.point.x, accuracy: 1.0)
+        XCTAssertEqual(tangent1.point.y, tangent2.point.y, accuracy: 1.0)
+    }
+}
+
 @available(iOS 13.0, *)
 final class PathTextTests: XCTestCase {
     static let text: NSAttributedString = {
@@ -17,7 +26,6 @@ final class PathTextTests: XCTestCase {
     }()
 
     func testCurve() {
-
         let P0 = CGPoint(x: 50, y: 500)
         let P1 = CGPoint(x: 300, y: 300)
         let P2 = CGPoint(x: 400, y: 700)
@@ -42,29 +50,17 @@ final class PathTextTests: XCTestCase {
         XCTAssertEqual(section.p2, P2)
         XCTAssertEqual(section.p3, P3)
 
-        let tangents = path.getTangents(atLocations: [0, 100, 200, 300, 400, 500, 600])
-        XCTAssertEqual(tangents, [
-            PathTangent(t: 0,
-                        point: P0,
-                        angle: -0.6747409422235526),
-            PathTangent(t: 0.12500000000000008,
-                        point: CGPoint(x: 137.30468750000003, y: 450.7812499999999),
-                        angle: -0.3065673394544241),
-            PathTangent(t: 0.2910000000000002,
-                        point: CGPoint(x: 237.5362013000002, y: 448.2551948000002),
-                        angle: 0.24776228093719516),
-            PathTangent(t: 0.46100000000000035,
-                        point: CGPoint(x: 329.50720430000024, y: 488.3711828000002),
-                        angle: 0.5101379919705208),
-            PathTangent(t: 0.6280000000000004,
-                        point: CGPoint(x: 417.8291456000003, y: 535.8834176000001),
-                        angle: 0.4199722465802793),
-            PathTangent(t: 0.8000000000000006,
-                        point: CGPoint(x: 515.6000000000005, y: 557.6000000000001),
-                        angle: -0.03958327393709937),
-            PathTangent(t: 0.9470000000000007,
-                        point: CGPoint(x: 611.4693869000005, y: 526.9224523999997),
-                        angle: -0.5366717117124462),
+        var generator = TangentGenerator(path: path)
+        let tangents = [0, 100, 200, 300, 400, 500, 600].compactMap{ generator.getTangent(at: $0) }
+        print(tangents)
+        AssertPathTangentsEqual(tangents, [
+            PathTangent(t: 0,     point: P0,                      angle: -0.674),
+            PathTangent(t: 0.124, point: CGPoint(x: 137, y: 451), angle: -0.310),
+            PathTangent(t: 0.288, point: CGPoint(x: 236, y: 448), angle:  0.234),
+            PathTangent(t: 0.461, point: CGPoint(x: 328, y: 488), angle:  0.510),
+            PathTangent(t: 0.628, point: CGPoint(x: 416, y: 536), angle:  0.420),
+            PathTangent(t: 0.800, point: CGPoint(x: 513, y: 558), angle: -0.026),
+            PathTangent(t: 0.947, point: CGPoint(x: 607, y: 528), angle: -0.522),
         ])
     }
 
@@ -90,17 +86,18 @@ final class PathTextTests: XCTestCase {
         XCTAssertEqual(section.start, P0)
         XCTAssertEqual(section.end, P1)
 
-        let tangents = path.getTangents(atLocations: [0, 100, 200, 300, 400, 500, 600, 700])
+        var generator = TangentGenerator(path: path)
+        let tangents = [0, 100, 200, 300, 400, 500, 600, 700].compactMap{ generator.getTangent(at: $0) }
 
-        XCTAssertEqual(tangents, [
+        AssertPathTangentsEqual(tangents, [
             PathTangent(t: 0, point: CGPoint(x: 0, y: 0), angle: 0),
-            PathTangent(t: 0.12500000000000008, point: CGPoint(x: 100.00000000000007, y: 0), angle: 0),
-            PathTangent(t: 0.25000000000000017, point: CGPoint(x: 200.00000000000014, y: 0), angle: 0),
-            PathTangent(t: 0.3750000000000003, point: CGPoint(x: 300.0000000000002, y: 0), angle: 0),
-            PathTangent(t: 0.5000000000000003, point: CGPoint(x: 400.0000000000003, y: 0), angle: 0),
-            PathTangent(t: 0.6250000000000004, point: CGPoint(x: 500.00000000000034, y: 0), angle: 0),
-            PathTangent(t: 0.7500000000000006, point: CGPoint(x: 600.0000000000005, y: 0), angle: 0),
-            PathTangent(t: 0.8750000000000007, point: CGPoint(x: 700.0000000000006, y: 0), angle: 0),
+            PathTangent(t: 0.125, point: CGPoint(x: 100, y: 0), angle: 0),
+            PathTangent(t: 0.250, point: CGPoint(x: 200, y: 0), angle: 0),
+            PathTangent(t: 0.375, point: CGPoint(x: 300, y: 0), angle: 0),
+            PathTangent(t: 0.500, point: CGPoint(x: 400, y: 0), angle: 0),
+            PathTangent(t: 0.625, point: CGPoint(x: 500, y: 0), angle: 0),
+            PathTangent(t: 0.750, point: CGPoint(x: 600, y: 0), angle: 0),
+            PathTangent(t: 0.875, point: CGPoint(x: 700, y: 0), angle: 0),
         ])
     }
 
@@ -126,19 +123,20 @@ final class PathTextTests: XCTestCase {
         XCTAssertEqual(section.start, P0)
         XCTAssertEqual(section.end, P1)
 
-        let tangents = path.getTangents(atLocations: [0, 100, 200, 300, 400, 500, 600, 700])
+        var generator = TangentGenerator(path: path)
+        let tangents = [0, 100, 200, 300, 400, 500, 600, 700].compactMap{ generator.getTangent(at: $0) }
 
         let angle: CGFloat = atan(1)
 
-        XCTAssertEqual(tangents, [
-            PathTangent(t: 0.0, point: CGPoint(x: 0.0, y: 0.0), angle: angle),
-            PathTangent(t: 0.08900000000000007, point: CGPoint(x: 71.200000000000050, y: 71.200000000000050), angle: angle),
-            PathTangent(t: 0.17800000000000013, point: CGPoint(x: 142.40000000000010, y: 142.40000000000010), angle: angle),
-            PathTangent(t: 0.26700000000000020, point: CGPoint(x: 213.60000000000014, y: 213.60000000000014), angle: angle),
-            PathTangent(t: 0.35600000000000026, point: CGPoint(x: 284.80000000000020, y: 284.80000000000020), angle: angle),
-            PathTangent(t: 0.44500000000000034, point: CGPoint(x: 356.00000000000030, y: 356.00000000000030), angle: angle),
-            PathTangent(t: 0.53400000000000040, point: CGPoint(x: 427.20000000000030, y: 427.20000000000030), angle: angle),
-            PathTangent(t: 0.62300000000000040, point: CGPoint(x: 498.40000000000040, y: 498.40000000000040), angle: angle),
+        AssertPathTangentsEqual(tangents, [
+            PathTangent(t: 0.000, point: CGPoint(x: 0.0, y: 0.0), angle: angle),
+            PathTangent(t: 0.089, point: CGPoint(x:  71, y:  71), angle: angle),
+            PathTangent(t: 0.178, point: CGPoint(x: 142, y: 142), angle: angle),
+            PathTangent(t: 0.267, point: CGPoint(x: 214, y: 214), angle: angle),
+            PathTangent(t: 0.356, point: CGPoint(x: 285, y: 285), angle: angle),
+            PathTangent(t: 0.445, point: CGPoint(x: 356, y: 356), angle: angle),
+            PathTangent(t: 0.534, point: CGPoint(x: 427, y: 427), angle: angle),
+            PathTangent(t: 0.623, point: CGPoint(x: 498, y: 498), angle: angle),
         ])
     }
 
@@ -174,18 +172,18 @@ final class PathTextTests: XCTestCase {
         XCTAssertEqual(section2.start, P1)
         XCTAssertEqual(section2.end, P2)
 
+        var generator = TangentGenerator(path: path)
+        let tangents = [0, 100, 200, 300, 400, 500, 600, 700].compactMap{ generator.getTangent(at: $0) }
 
-        let tangents = path.getTangents(atLocations: [0, 100, 200, 300, 400, 500, 600, 700])
-
-        XCTAssertEqual(tangents, [
-            PathTangent(t: 0.0, point: CGPoint(x: 0.0, y: 0.0), angle: 0.7853981633974483),
-            PathTangent(t: 0.17700000000000013, point: CGPoint(x: 70.80000000000005, y: 70.80000000000005), angle: 0.7853981633974483),
-            PathTangent(t: 0.35400000000000026, point: CGPoint(x: 141.6000000000001, y: 141.6000000000001), angle: 0.7853981633974483),
-            PathTangent(t: 0.5310000000000004, point: CGPoint(x: 212.40000000000015, y: 212.40000000000015), angle: 0.7853981633974483),
-            PathTangent(t: 0.7080000000000005, point: CGPoint(x: 283.2000000000002, y: 283.2000000000002), angle: 0.7853981633974483),
-            PathTangent(t: 0.8850000000000007, point: CGPoint(x: 354.0000000000003, y: 354.0000000000003), angle: 0.7853981633974483),
-            PathTangent(t: 0.0, point: CGPoint(x: 400.0, y: 400.0), angle: -0.7853981633974483),
-            PathTangent(t: 0.17700000000000013, point: CGPoint(x: 470.80000000000007, y: 329.19999999999993), angle: -0.7853981633974483),
+        AssertPathTangentsEqual(tangents, [
+            PathTangent(t: 0.000, point: CGPoint(x:   0, y:   0), angle:  0.785),
+            PathTangent(t: 0.177, point: CGPoint(x:  70, y:  71), angle:  0.785),
+            PathTangent(t: 0.354, point: CGPoint(x: 141, y: 142), angle:  0.785),
+            PathTangent(t: 0.531, point: CGPoint(x: 212, y: 212), angle:  0.785),
+            PathTangent(t: 0.708, point: CGPoint(x: 283, y: 283), angle:  0.785),
+            PathTangent(t: 0.885, point: CGPoint(x: 354, y: 354), angle:  0.785),
+            PathTangent(t: 0.062, point: CGPoint(x: 425, y: 375), angle: -0.785),
+            PathTangent(t: 0.239, point: CGPoint(x: 496, y: 304), angle: -0.785),
         ])
     }
 
@@ -200,7 +198,6 @@ final class PathTextTests: XCTestCase {
             $0.addQuadCurve(to: P2, control: P1)
         }.cgPath
 
-
         let sections = path.sections()
 
         XCTAssertEqual(sections.count, 1)
@@ -214,17 +211,17 @@ final class PathTextTests: XCTestCase {
         XCTAssertEqual(section1.p1, P1)
         XCTAssertEqual(section1.p2, P2)
 
+        var generator = TangentGenerator(path: path)
+        let tangents = [0, 100, 200, 300, 400, 500, 600, 700].compactMap{ generator.getTangent(at: $0) }
 
-        let tangents = path.getTangents(atLocations: [0, 100, 200, 300, 400, 500, 600, 700])
-
-        XCTAssertEqual(tangents, [
-            PathTangent(t: 0.0, point: CGPoint(x: 50.0, y: 500.0), angle: -0.6747409422235526),
-            PathTangent(t: 0.16300000000000012, point: CGPoint(x: 134.15690000000006, y: 445.4275999999999), angle: -0.468592129688314),
-            PathTangent(t: 0.33400000000000024, point: CGPoint(x: 228.1556000000001, y: 411.0223999999999), angle: -0.23014641756505352),
-            PathTangent(t: 0.5050000000000003, point: CGPoint(x: 328.00250000000017, y: 400.01), angle: 0.00665547577262706),
-            PathTangent(t: 0.6670000000000005, point: CGPoint(x: 427.9889000000003, y: 411.15560000000005), angle: 0.20787811837303863),
-            PathTangent(t: 0.8150000000000006, point: CGPoint(x: 523.9225000000004, y: 439.6900000000001), angle: 0.3632260863338026),
-            PathTangent(t: 0.9500000000000007, point: CGPoint(x: 615.2500000000005, y: 481.0000000000002), angle: 0.48088728019533633),
+        AssertPathTangentsEqual(tangents, [
+            PathTangent(t: 0.000, point: CGPoint(x:  50, y: 500), angle: -0.675),
+            PathTangent(t: 0.163, point: CGPoint(x: 134, y: 445), angle: -0.469),
+            PathTangent(t: 0.334, point: CGPoint(x: 228, y: 411), angle: -0.230),
+            PathTangent(t: 0.505, point: CGPoint(x: 328, y: 400), angle:  0.007),
+            PathTangent(t: 0.667, point: CGPoint(x: 427, y: 411), angle:  0.208),
+            PathTangent(t: 0.815, point: CGPoint(x: 523, y: 440), angle:  0.363),
+            PathTangent(t: 0.950, point: CGPoint(x: 614, y: 481), angle:  0.481),
         ])
     }
 }

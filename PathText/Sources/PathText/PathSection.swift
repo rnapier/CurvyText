@@ -29,13 +29,13 @@ extension PathSection {
         var approximateLinearDistance: CGFloat = 0
 
         var nextTangent = lastTangent
-        while approximateLinearDistance <= linearDistance && nextTangent.t < 1.0 {
+        while approximateLinearDistance < linearDistance && nextTangent.t <= 1.0 {
             lastTangent = nextTangent
             nextTangent = getTangent(t: nextTangent.t + step)
             approximateLinearDistance += lastTangent.point.distance(to: nextTangent.point)
         }
 
-        if nextTangent.t >= 1.0 {
+        if nextTangent.t > 1.0 {
             return .insufficient(remainingLinearDistance: approximateLinearDistance)
         } else {
             return .found(nextTangent)
@@ -52,6 +52,41 @@ struct PathTangent: Equatable {
 enum NextTangent {
     case found(PathTangent)
     case insufficient(remainingLinearDistance: CGFloat)
+}
+
+struct TangentGenerator {
+    private var sections: ArraySlice<PathSection>
+    private var lastLocation: CGFloat = 0
+    private var lastTangent: PathTangent?
+
+    init(path: CGPath) {
+        sections = path.sections()[...]
+    }
+
+    // Locations must be in ascending order
+    mutating func getTangent(at location: CGFloat) -> PathTangent? {
+        assert(location >= lastLocation)
+
+        while let section = sections.first  {
+            let currentTangent = lastTangent ?? section.getTangent(t: 0)
+            let linearDistance = location - lastLocation
+
+            switch section.nextTangent(linearDistance: linearDistance,
+                                       after: currentTangent) {
+            case .found(let tangent):
+                lastTangent = tangent
+                lastLocation = location
+                return tangent
+
+            case let .insufficient(remainingLinearDistance: remain):
+                lastLocation += remain
+                lastTangent = nil
+                sections.removeFirst()
+            }
+        }
+
+        return nil
+    }
 }
 
 extension CGPath {
@@ -112,41 +147,6 @@ extension CGPath {
         self.apply(info: &applier, function: f)
 
         return applier.sections
-    }
-
-    // Locations must be in ascending order
-    func getTangents(atLocations locations: [CGFloat]) -> [PathTangent] {
-        assert(locations == locations.sorted())
-
-        var sections = self.sections()[...]
-
-        var tangents: [PathTangent] = []
-        var locations = locations[...]
-
-        var lastLocation: CGFloat = 0.0
-        var lastTangent: PathTangent? = nil
-
-        while let location = locations.first, let section = sections.first  {
-            let currentTangent = lastTangent ?? section.getTangent(t: 0)
-
-            let linearDistance = location - lastLocation
-
-            switch section.nextTangent(linearDistance: linearDistance,
-                                       after: currentTangent) {
-            case .found(let tangent):
-                tangents.append(tangent)
-                lastTangent = tangent
-                lastLocation = location
-                locations = locations.dropFirst()
-
-            case let .insufficient(remainingLinearDistance: remain):
-                lastLocation += remain
-                lastTangent = nil
-                sections = sections.dropFirst()
-            }
-        }
-
-        return tangents
     }
 }
 
