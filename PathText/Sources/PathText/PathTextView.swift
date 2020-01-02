@@ -114,6 +114,10 @@ struct PathText_Previews: PreviewProvider {
         s.addAttribute(.font, value: UIFont.boldSystemFont(ofSize: 48), range: string.range(of: "tëxt"))
         s.addAttribute(.foregroundColor, value: UIColor.red, range: string.range(of: "d\u{030a}isplay"))
         s.addAttribute(.font, value: UIFont.systemFont(ofSize: 32), range: string.range(of: "big text"))
+
+        s.addAttribute(.strokeColor, value: UIColor.blue, range: string.range(of: "can"))
+        s.addAttribute(.strokeWidth, value: 2, range: string.range(of: "can"))
+
         s.addAttribute(.baselineOffset, value: 20, range: string.range(of: "along"))
 
         let shadow = NSShadow()
