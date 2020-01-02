@@ -17,8 +17,10 @@ private extension Sequence {
 }
 
 struct GlyphLocation {
-    var glyphRange: CFRange
-    var anchor: CGFloat // Center location
+    var glyph: CGGlyph
+    var position: CGPoint
+    var width: CGFloat
+    var anchor: CGFloat { position.x + width / 2 }
 }
 
 struct GlyphRun {
@@ -34,6 +36,10 @@ struct GlyphRun {
         let baseTextMatrix = context.textMatrix
         defer { context.textMatrix = baseTextMatrix }
 
+        // FIXME: Apply other attributes
+        let attributes = CTRunGetAttributes(run) as! [CFString : Any]
+        let font = attributes[kCTFontAttributeName] as! CTFont
+
         for (location, tangent) in zip(locations, tangents) {
             context.saveGState()
             defer { context.restoreGState() }
@@ -41,14 +47,12 @@ struct GlyphRun {
             let tangentPoint = tangent.point
             let angle = tangent.angle
 
-            // FIXME: Apply other attributes
-
             context.translateBy(x: tangentPoint.x, y: tangentPoint.y)
             context.rotate(by: angle)
 
-            context.textMatrix = baseTextMatrix.translatedBy(x: -location.anchor, y: 0)
-
-            CTRunDraw(run, context, location.glyphRange)
+            var glyph = location.glyph
+            var point = CGPoint(x: -location.width / 2, y: location.position.y)
+            CTFontDrawGlyphs(font, &glyph, &point, 1, context)
         }
     }
 }
@@ -90,10 +94,13 @@ struct PathTextLayoutManager {
                 CGFloat(CTRunGetTypographicBounds(run, CFRange(location: $0, length: 1), nil, nil, nil))
             }
 
-            let anchors = zip(positions, widths).map { $0.x + $1 / 2 }
+            let glyphs = Array<CGGlyph>(unsafeUninitializedCapacity: glyphCount) { (buffer, initialized) in
+                CTRunGetGlyphs(run, CFRange(), buffer.baseAddress!)
+                initialized = glyphCount
+            }
 
-            let locations = anchors.enumerated()
-                .map { GlyphLocation(glyphRange: CFRange(location: $0, length: 1), anchor: $1) }
+            let locations = zip(glyphs, zip(positions, widths))
+                .map {  GlyphLocation(glyph: $0, position: $1.0, width: $1.1) }
                 .sorted { $0.anchor < $1.anchor }
 
             return GlyphRun(run: run, locations: locations)

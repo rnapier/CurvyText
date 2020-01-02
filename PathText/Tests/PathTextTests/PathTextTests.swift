@@ -52,7 +52,7 @@ final class PathTextTests: XCTestCase {
 
         var generator = TangentGenerator(path: path)
         let tangents = [0, 100, 200, 300, 400, 500, 600].compactMap{ generator.getTangent(at: $0) }
-        print(tangents)
+
         AssertPathTangentsEqual(tangents, [
             PathTangent(t: 0,     point: P0,                      angle: -0.674),
             PathTangent(t: 0.124, point: CGPoint(x: 137, y: 451), angle: -0.310),
