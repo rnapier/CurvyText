@@ -5,11 +5,9 @@ import XCTest
 import UIKit
 typealias PlatformFont = UIFont
 typealias PlatformColor = UIColor
-typealias PlatformView = UIView
 #elseif canImport(AppKit)
 typealias PlatformFont = NSFont
 typealias PlatformColor = NSColor
-typealias PlatformView = NSView
 #else
 #error("Unsupported platform")
 #endif

@@ -8,11 +8,22 @@
 import Foundation
 import CoreText
 
+// For NSShaddow
 #if canImport(UIKit)
 import UIKit
 #elseif canImport(AppKit)
 import AppKit
 #endif
+
+// Terminology:
+//     t: Value from 0 to 1, where 0 is the starting point, and 1 is the final point.
+//        Note that t=0.5 does *not* mean "half-way through the curve."
+//
+//     linearDistance: 1-D distance along the path
+//
+//     location: a linearDistance from the starting point
+//
+//     distance: 2-D Eucledian distance
 
 private extension Sequence {
     func mapUntilNil<ElementOfResult>(_ transform: (Self.Element) throws -> ElementOfResult?) rethrows -> [ElementOfResult] {
