@@ -1,6 +1,18 @@
 import XCTest
-import SwiftUI
 @testable import PathText
+
+#if canImport(UIKit)
+import UIKit
+typealias PlatformFont = UIFont
+typealias PlatformColor = UIColor
+typealias PlatformView = UIView
+#elseif canImport(AppKit)
+typealias PlatformFont = NSFont
+typealias PlatformColor = NSColor
+typealias PlatformView = NSView
+#else
+#error("Unsupported platform")
+#endif
 
 func AssertPathTangentsEqual(_ expression1: [PathTangent], _ expression2: [PathTangent]) {
     for (tangent1, tangent2) in zip(expression1, expression2) {
@@ -11,17 +23,18 @@ func AssertPathTangentsEqual(_ expression1: [PathTangent], _ expression2: [PathT
     }
 }
 
-@available(iOS 13.0, *)
+@available(iOS, introduced: 13.0)
+@available(OSX, introduced: 10.15)
 final class PathTextTests: XCTestCase {
     static let text: NSAttributedString = {
         let string = NSString("You can display text along a curve, with bold, color, and big text.")
 
         let s = NSMutableAttributedString(string: string as String,
-                                          attributes: [.font: UIFont.systemFont(ofSize: 16)])
+                                          attributes: [.font: PlatformFont.systemFont(ofSize: 16)])
 
-        s.addAttributes([.font: UIFont.boldSystemFont(ofSize: 16)], range: string.range(of: "bold"))
-        s.addAttributes([.foregroundColor: UIColor.red], range: string.range(of: "color"))
-        s.addAttributes([.font: UIFont.systemFont(ofSize: 32)], range: string.range(of: "big text"))
+        s.addAttributes([.font: PlatformFont.boldSystemFont(ofSize: 16)], range: string.range(of: "bold"))
+        s.addAttributes([.foregroundColor: PlatformColor.red], range: string.range(of: "color"))
+        s.addAttributes([.font: PlatformFont.systemFont(ofSize: 32)], range: string.range(of: "big text"))
         return s
     }()
 
@@ -31,10 +44,9 @@ final class PathTextTests: XCTestCase {
         let P2 = CGPoint(x: 400, y: 700)
         let P3 = CGPoint(x: 650, y: 500)
 
-        let path = Path() {
-            $0.move(to: P0)
-            $0.addCurve(to: P3, control1: P1, control2: P2)
-        }.cgPath
+        let path = CGMutablePath()
+        path.move(to: P0)
+        path.addCurve(to: P3, control1: P1, control2: P2)
 
         let sections = path.sections()
 
@@ -69,10 +81,9 @@ final class PathTextTests: XCTestCase {
         let P0 = CGPoint(x: 0, y: 0)
         let P1 = CGPoint(x: 800, y: 0)
 
-        let path = Path() {
-            $0.move(to: P0)
-            $0.addLine(to: P1)
-        }.cgPath
+        let path = CGMutablePath()
+        path.move(to: P0)
+        path.addLine(to: P1)
 
         let sections = path.sections()
 
@@ -106,10 +117,9 @@ final class PathTextTests: XCTestCase {
         let P0 = CGPoint(x: 0, y: 0)
         let P1 = CGPoint(x: 800, y: 800)
 
-        let path = Path() {
-            $0.move(to: P0)
-            $0.addLine(to: P1)
-        }.cgPath
+        let path = CGMutablePath()
+        path.move(to: P0)
+        path.addLine(to: P1)
 
         let sections = path.sections()
 
@@ -146,11 +156,10 @@ final class PathTextTests: XCTestCase {
         let P1 = CGPoint(x: 400, y: 400)
         let P2 = CGPoint(x: 800, y: 0)
 
-        let path = Path() {
-            $0.move(to: P0)
-            $0.addLine(to: P1)
-            $0.addLine(to: P2)
-        }.cgPath
+        let path = CGMutablePath()
+        path.move(to: P0)
+        path.addLine(to: P1)
+        path.addLine(to: P2)
 
         let sections = path.sections()
 
@@ -193,10 +202,9 @@ final class PathTextTests: XCTestCase {
         let P1 = CGPoint(x: 300, y: 300)
         let P2 = CGPoint(x: 650, y: 500)
 
-        let path = Path() {
-            $0.move(to: P0)
-            $0.addQuadCurve(to: P2, control: P1)
-        }.cgPath
+        let path = CGMutablePath()
+        path.move(to: P0)
+        path.addQuadCurve(to: P2, control: P1)
 
         let sections = path.sections()
 

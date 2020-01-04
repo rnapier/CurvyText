@@ -14,9 +14,13 @@ import SwiftUI
 import UIKit
 typealias PlatformFont = UIFont
 typealias PlatformColor = UIColor
+@available(iOS, introduced: 13) typealias PlatformViewRepresentable = UIViewRepresentable
+typealias PlatformView = UIView
 #elseif canImport(AppKit)
 typealias PlatformFont = NSFont
 typealias PlatformColor = NSColor
+@available(OSX, introduced: 10.15) typealias PlatformViewRepresentable = NSViewRepresentable
+typealias PlatformView = NSView
 #else
 #error("Unsupported platform")
 #endif
@@ -31,8 +35,9 @@ typealias PlatformColor = NSColor
 //
 //     distance: 2-D Eucledian distance
 
-@available(iOS 13.0, *)
-public struct PathText: UIViewRepresentable {
+@available(iOS, introduced: 13)
+@available(OSX, introduced: 10.15)
+public struct PathText: PlatformViewRepresentable {
     public var text: NSAttributedString
     public var path: CGPath
 
@@ -45,19 +50,29 @@ public struct PathText: UIViewRepresentable {
         self.path = path
     }
 
-    public func makeUIView(context: UIViewRepresentableContext<PathText>) -> PathTextView {
-        PathTextView()
-    }
+    #if canImport(UIKit)
+    public func makeUIView(context: Context) -> PathTextView { PathTextView() }
+    #elseif canImport(AppKit)
+    public func makeNSView(context: Context) -> PathTextView { PathTextView() }
+    #endif
 
-    public func updateUIView(_ uiView: PathTextView, context: UIViewRepresentableContext<PathText>) {
+    #if canImport(UIKit)
+    public func updateUIView(_ uiView: PathTextView, context: Context) {
         uiView.text = text
         uiView.path = path
     }
+    #elseif canImport(AppKit)
+    public func updateNSView(_ nsView: PathTextView, context: Context) {
+        nsView.text = text
+        nsView.path = path
+    }
+    #endif
 }
 
 /*
  Draws attributed text along a cubic Bezier path defined by P0, P1, P2, and P3
  */
+#if canImport(UIKit)
 public class PathTextView: UIView {
 
     private var layoutManager = PathTextLayoutManager()
@@ -90,18 +105,54 @@ public class PathTextView: UIView {
         layoutManager.draw(in: context)
     }
 }
+#elseif canImport(AppKit)
+public class PathTextView: NSView {
 
-@available(iOS 13.0.0, *)
+    private var layoutManager = PathTextLayoutManager()
+
+    public var text: NSAttributedString {
+        get { layoutManager.text }
+        set {
+            layoutManager.text = newValue
+            setNeedsDisplay(self.bounds)
+        }
+    }
+
+    public var path: CGPath {
+        get { layoutManager.path }
+        set {
+            layoutManager.path = newValue
+            setNeedsDisplay(self.bounds)
+        }
+    }
+
+    public init() {
+        super.init(frame: .zero)
+        wantsLayer = true
+        layer?.backgroundColor = .clear
+    }
+
+    required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
+
+    public override func draw(_ rect: CGRect) {
+        let context = NSGraphicsContext.current!.cgContext
+        layoutManager.draw(in: context)
+    }
+}
+#endif
+
+@available(iOS, introduced: 13)
+@available(OSX, introduced: 10.15)
 struct PathText_Previews: PreviewProvider {
 //    static let text: NSAttributedString = {
 //        let string = NSString("You can display text along a curve, with bold, color, and big text.")
 //
 //        let s = NSMutableAttributedString(string: string as String,
-//                                          attributes: [.font: UIFont.systemFont(ofSize: 16)])
+//                                          attributes: [.font: PlatformFont.systemFont(ofSize: 16)])
 //
-//        s.addAttributes([.font: UIFont.boldSystemFont(ofSize: 16)], range: string.range(of: "bold"))
-//        s.addAttributes([.foregroundColor: UIColor.red], range: string.range(of: "color"))
-//        s.addAttributes([.font: UIFont.systemFont(ofSize: 32)], range: string.range(of: "big text"))
+//        s.addAttributes([.font: PlatformFont.boldSystemFont(ofSize: 16)], range: string.range(of: "bold"))
+//        s.addAttributes([.foregroundColor: PlatformColor.red], range: string.range(of: "color"))
+//        s.addAttributes([.font: PlatformFont.systemFont(ofSize: 32)], range: string.range(of: "big text"))
 //        return s
 //    }()
 
@@ -109,20 +160,20 @@ struct PathText_Previews: PreviewProvider {
         let string = NSString("mmii can d\u{030a}isplay العربية tëxt along a cu\u{0327}rve, with bold, color, and big text.")
 
         let s = NSMutableAttributedString(string: string as String,
-                                          attributes: [.font: UIFont.systemFont(ofSize: 48)])
+                                          attributes: [.font: PlatformFont.systemFont(ofSize: 48)])
 
-        s.addAttribute(.font, value: UIFont.boldSystemFont(ofSize: 48), range: string.range(of: "tëxt"))
-        s.addAttribute(.foregroundColor, value: UIColor.red, range: string.range(of: "d\u{030a}isplay"))
-        s.addAttribute(.font, value: UIFont.systemFont(ofSize: 32), range: string.range(of: "big text"))
+        s.addAttribute(.font, value: PlatformFont.boldSystemFont(ofSize: 48), range: string.range(of: "tëxt"))
+        s.addAttribute(.foregroundColor, value: PlatformColor.red, range: string.range(of: "d\u{030a}isplay"))
+        s.addAttribute(.font, value: PlatformFont.systemFont(ofSize: 32), range: string.range(of: "big text"))
 
-        s.addAttribute(.strokeColor, value: UIColor.blue, range: string.range(of: "can"))
+        s.addAttribute(.strokeColor, value: PlatformColor.blue, range: string.range(of: "can"))
         s.addAttribute(.strokeWidth, value: 2, range: string.range(of: "can"))
 
         s.addAttribute(.baselineOffset, value: 20, range: string.range(of: "along"))
 
         let shadow = NSShadow()
         shadow.shadowBlurRadius = 5
-        shadow.shadowColor = UIColor.green
+        shadow.shadowColor = PlatformColor.green
         shadow.shadowOffset = CGSize(width: 5, height: 10)
         s.addAttribute(.shadow, value: shadow, range: string.range(of: "can"))
 
@@ -248,7 +299,7 @@ struct PathText_Previews: PreviewProvider {
                 .font(.system(size: 48))
             ZStack {
                 PathText(text: NSAttributedString(string: "ÅX̊Z",
-                                                  attributes: [.font: UIFont.systemFont(ofSize: 48)]), path: path)
+                                                  attributes: [.font: PlatformFont.systemFont(ofSize: 48)]), path: path)
                 path.stroke(Color.blue, lineWidth: 2)
             }
         }
@@ -273,11 +324,11 @@ struct PathText_Previews: PreviewProvider {
 //        let string = NSString("You can display text along a curve, with bold, color, and big text.")
 //
 //        let s = NSMutableAttributedString(string: string as String,
-//                                          attributes: [.font: UIFont.systemFont(ofSize: 16)])
+//                                          attributes: [.font: PlatformFont.systemFont(ofSize: 16)])
 //
-//        s.addAttributes([.font: UIFont.boldSystemFont(ofSize: 16)], range: string.range(of: "bold"))
-//        s.addAttributes([.foregroundColor: UIColor.red], range: string.range(of: "color"))
-//        s.addAttributes([.font: UIFont.systemFont(ofSize: 32)], range: string.range(of: "big text"))
+//        s.addAttributes([.font: PlatformFont.boldSystemFont(ofSize: 16)], range: string.range(of: "bold"))
+//        s.addAttributes([.foregroundColor: PlatformColor.red], range: string.range(of: "color"))
+//        s.addAttributes([.font: PlatformFont.systemFont(ofSize: 32)], range: string.range(of: "big text"))
 //        return s
 //    }()
 //
