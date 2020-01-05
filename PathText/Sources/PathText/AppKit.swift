@@ -13,7 +13,9 @@ typealias PlatformColor = NSColor
 
 @available(OSX, introduced: 10.15)
 extension PathText: NSViewRepresentable {
-    public func makeNSView(context: Context) -> PathTextView { PathTextView() }
+    public func makeNSView(context: Context) -> PathTextView {
+        PathTextView(flipped: true)
+    }
 
     public func updateNSView(_ nsView: PathTextView, context: Context) {
         nsView.text = text
@@ -22,8 +24,10 @@ extension PathText: NSViewRepresentable {
 }
 
 public class PathTextView: NSView {
-
     private var layoutManager = PathTextLayoutManager()
+
+    private let _isFlipped: Bool
+    override public var isFlipped: Bool { return _isFlipped }
 
     public var text: NSAttributedString {
         get { layoutManager.text }
@@ -41,7 +45,12 @@ public class PathTextView: NSView {
         }
     }
 
-    public init(frame: CGRect = .zero, text: NSAttributedString = NSAttributedString(), path: CGPath = CGMutablePath()) {
+    public init(frame: CGRect = .zero,
+                text: NSAttributedString = NSAttributedString(),
+                path: CGPath = CGMutablePath(),
+                flipped: Bool = false) {
+
+        self._isFlipped = flipped
         super.init(frame: frame)
         self.text = text
         self.path = path
@@ -51,7 +60,10 @@ public class PathTextView: NSView {
 
     public override func draw(_ rect: CGRect) {
         let context = NSGraphicsContext.current!.cgContext
-//        context.textMatrix = CGAffineTransform(scaleX: 1, y: -1)
+
+        if isFlipped {
+            context.textMatrix = CGAffineTransform(scaleX: 1, y: -1)
+        }
 
         layoutManager.draw(in: context)
     }
