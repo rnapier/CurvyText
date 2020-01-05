@@ -9,7 +9,7 @@
 import AppKit
 import SwiftUI
 
-typealias PlatformFont = NSFont
+//typealias PlatformFont = NSFont
 typealias PlatformColor = NSColor
 
 @available(OSX, introduced: 10.15)

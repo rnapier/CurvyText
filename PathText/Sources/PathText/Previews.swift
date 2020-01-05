@@ -7,6 +7,15 @@
 
 import SwiftUI
 
+#if canImport(UIKit)
+import UIKit
+private typealias PlatformFont = UIFont
+#elseif canImport(AppKit)
+private typealias PlatformFont = NSFont
+#else
+#error("Unsupported platform")
+#endif
+
 @available(iOS, introduced: 13)
 @available(OSX, introduced: 10.15)
 struct PathText_Previews: PreviewProvider {
