@@ -33,10 +33,32 @@ private extension Sequence {
     }
 }
 
+struct TypographicBounds {
+    var width: CGFloat
+    var ascent: CGFloat
+    var descent: CGFloat
+    var height: CGFloat { ascent + descent }
+    var rect: CGRect {
+        CGRect(origin: CGPoint(x: 0, y: ascent), size: CGSize(width: width, height: height))
+    }
+}
+
+extension TypographicBounds {
+    init(run: CTRun, index: Int) {
+        var ascent: CGFloat = 0
+        var descent: CGFloat = 0
+        let width = CGFloat(CTRunGetTypographicBounds(run,
+                                                      CFRange(location: index, length: 1),
+                                                      &ascent, &descent, nil))
+        self.init(width: width, ascent: ascent, descent: descent)
+    }
+}
+
 struct GlyphLocation {
     var glyph: CGGlyph
     var position: CGPoint
-    var width: CGFloat
+    var typographicBounds: TypographicBounds
+    var width: CGFloat { typographicBounds.width }
     var anchor: CGFloat { position.x + width / 2 }
 }
 
@@ -136,6 +158,27 @@ struct GlyphRun {
         tangents = locations.mapUntilNil { tangentGenerator.getTangent(at: $0.anchor) }
     }
 
+    var typographicBounds: CGRect {
+        // FIXME: Duplicate
+        let attributes = CTRunGetAttributes(run) as! [NSAttributedString.Key : Any]
+        let baselineOffset = attributes[.baselineOffset] as? CGFloat ?? 0
+
+        let transformed: [CGRect] = zip(locations, tangents).map { (arg) in
+            let (location, tangent) = arg
+
+            let tangentPoint = tangent.point
+            let angle = tangent.angle
+
+            return location.typographicBounds.rect
+                .offsetBy(dx: 0, dy:  -2 * location.typographicBounds.ascent)   // Normalize to baseline
+                .offsetBy(dx: -location.width / 2, dy: -(location.position.y + baselineOffset)) // Move anchor to .zero
+                .applying(.init(rotationAngle: angle))  // Rotate
+                .offsetBy(dx: tangentPoint.x, dy: tangentPoint.y)   // Translate in rotated context
+        }
+
+        return transformed.reduce(.null) { $0.union($1) }
+    }
+
     func draw(in context: CGContext) {
         context.saveGState()
         defer { context.restoreGState() }
@@ -152,10 +195,11 @@ struct GlyphRun {
             let tangentPoint = tangent.point
             let angle = tangent.angle
 
-            context.translateBy(x: tangentPoint.x, y: tangentPoint.y)
+            context.translateBy(x: tangentPoint.x, y: tangentPoint.y)   // y is flipped
             context.rotate(by: angle)
 
-            context.textPosition = CGPoint(x: -location.width / 2, y: -location.position.y - baselineOffset)
+            context.textPosition = CGPoint(x: -location.width / 2,
+                                           y: -(location.position.y + baselineOffset))  // y is flipped
 
             // Use CGContext rather than CTFontDrawGlyphs to get context features like shadow
             context.showGlyphs([location.glyph], at: [.zero])

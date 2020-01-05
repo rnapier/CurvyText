@@ -22,6 +22,14 @@ struct PathTextLayoutManager {
         }
     }
 
+    mutating func ensureGlyphs() {
+        if needsGlyphGeneration { updateGlyphRuns() }
+    }
+
+    mutating func ensureLayout() {
+        if needsLayout { updateGlyphPositions() }
+    }
+
     private var needsGlyphGeneration = false
     public mutating func invalidateGlyphs() { needsGlyphGeneration = true }
 
@@ -42,8 +50,8 @@ struct PathTextLayoutManager {
                 initialized = glyphCount
             }
 
-            let widths: [CGFloat] = (0..<glyphCount).map {
-                CGFloat(CTRunGetTypographicBounds(run, CFRange(location: $0, length: 1), nil, nil, nil))
+            let bounds: [TypographicBounds] = (0..<glyphCount).map {
+                TypographicBounds(run: run, index: $0)
             }
 
             let glyphs = Array<CGGlyph>(unsafeUninitializedCapacity: glyphCount) { (buffer, initialized) in
@@ -51,8 +59,8 @@ struct PathTextLayoutManager {
                 initialized = glyphCount
             }
 
-            let locations = zip(glyphs, zip(positions, widths))
-                .map { GlyphLocation(glyph: $0, position: $1.0, width: $1.1) }
+            let locations = zip(glyphs, zip(positions, bounds))
+                .map { GlyphLocation(glyph: $0, position: $1.0, typographicBounds: $1.1) }
                 .sorted { $0.anchor < $1.anchor }
 
             return GlyphRun(run: run, locations: locations)
@@ -62,7 +70,7 @@ struct PathTextLayoutManager {
     }
 
     private mutating func updateGlyphPositions() {
-        if needsGlyphGeneration { updateGlyphRuns() }
+        ensureGlyphs()
         var tangents = TangentGenerator(path: path)
         glyphRuns = glyphRuns.map {
             var glyphRun = $0
@@ -74,9 +82,7 @@ struct PathTextLayoutManager {
     }
 
     public mutating func draw(in context: CGContext) {
-        if needsLayout {
-            updateGlyphPositions()
-        }
+        ensureLayout()
 
         for run in glyphRuns {
             run.draw(in: context)
