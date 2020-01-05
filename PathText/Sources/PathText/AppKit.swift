@@ -51,7 +51,7 @@ public class PathTextView: NSView {
 
     public override func draw(_ rect: CGRect) {
         let context = NSGraphicsContext.current!.cgContext
-        context.textMatrix = CGAffineTransform(scaleX: 1, y: -1)
+//        context.textMatrix = CGAffineTransform(scaleX: 1, y: -1)
 
         layoutManager.draw(in: context)
     }

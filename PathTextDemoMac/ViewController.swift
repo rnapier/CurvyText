@@ -35,14 +35,19 @@ class ViewController: NSViewController {
             return s
         }()
 
-        let textView = PathTextView(frame: CGRect(origin: CGPoint(x: 50, y: 100),
-                                                  size: CGSize(width: 650, height: 200)),
-                                    text: text, path: path)
+        let frame = CGRect(origin: CGPoint(x: 50, y: 100),
+                           size: CGSize(width: 650, height: 200))
+
+        let textView = PathTextView(frame: frame, text: text, path: path)
 
         textView.wantsLayer = true
         textView.layer?.borderColor = NSColor.red.cgColor
         textView.layer?.borderWidth = 1
         view.addSubview(textView)
+
+        let pathView = PathView(frame: frame, path: path)
+        view.addSubview(pathView)
+
     }
 
     override var representedObject: Any? {
@@ -50,7 +55,22 @@ class ViewController: NSViewController {
         // Update the view, if already loaded.
         }
     }
-
-
 }
 
+class PathView: NSView {
+    var path: CGPath
+    init(frame: CGRect = .zero, path: CGPath) {
+        self.path = path
+        super.init(frame: frame)
+    }
+
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    override func draw(_ dirtyRect: NSRect) {
+        let ctx = NSGraphicsContext.current!.cgContext
+        ctx.addPath(path)
+        ctx.strokePath()
+    }
+}
