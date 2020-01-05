@@ -1,11 +1,12 @@
 //
 //  ContentView.swift
-//  CurvyText
+//  CurvyTextMac
 //
-//  Created by Rob Napier on 12/6/19.
-//  Copyright © 2019 Rob Napier. All rights reserved.
+//  Created by Rob Napier on 1/5/20.
+//  Copyright © 2020 Rob Napier. All rights reserved.
 //
 
+import AppKit
 import SwiftUI
 import PathText
 
@@ -19,11 +20,11 @@ struct ContentView: View {
         let string = NSString("You can display text along a curve, with bold, color, and big text.")
 
         let s = NSMutableAttributedString(string: string as String,
-                                          attributes: [.font: UIFont.systemFont(ofSize: 16)])
+                                          attributes: [.font: NSFont.systemFont(ofSize: 16)])
 
-        s.addAttributes([.font: UIFont.boldSystemFont(ofSize: 16)], range: string.range(of: "bold"))
-        s.addAttributes([.foregroundColor: UIColor.red], range: string.range(of: "color"))
-        s.addAttributes([.font: UIFont.systemFont(ofSize: 32)], range: string.range(of: "big text"))
+        s.addAttributes([.font: NSFont.boldSystemFont(ofSize: 16)], range: string.range(of: "bold"))
+        s.addAttributes([.foregroundColor: NSColor.red], range: string.range(of: "color"))
+        s.addAttributes([.font: NSFont.systemFont(ofSize: 32)], range: string.range(of: "big text"))
         return s
     }()
 

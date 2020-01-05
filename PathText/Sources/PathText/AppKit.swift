@@ -9,7 +9,6 @@
 import AppKit
 import SwiftUI
 
-//typealias PlatformFont = NSFont
 typealias PlatformColor = NSColor
 
 @available(OSX, introduced: 10.15)
@@ -52,6 +51,8 @@ public class PathTextView: NSView {
 
     public override func draw(_ rect: CGRect) {
         let context = NSGraphicsContext.current!.cgContext
+        context.textMatrix = CGAffineTransform(scaleX: 1, y: -1)
+
         layoutManager.draw(in: context)
     }
 }

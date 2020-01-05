@@ -45,8 +45,11 @@ public class PathTextView: UIView {
         }
     }
 
-    public init() {
-        super.init(frame: .zero)
+    public init(frame: CGRect = .zero, text: NSAttributedString = NSAttributedString(), path: CGPath = CGMutablePath()) {
+        super.init(frame: frame)
+        self.text = text
+        self.path = path
+
         backgroundColor = .clear
     }
 
@@ -54,6 +57,7 @@ public class PathTextView: UIView {
 
     public override func draw(_ rect: CGRect) {
         let context = UIGraphicsGetCurrentContext()!
+        context.textMatrix = CGAffineTransform(scaleX: 1, y: -1)
         layoutManager.draw(in: context)
     }
 }

@@ -78,9 +78,6 @@ struct PathTextLayoutManager {
             updateGlyphPositions()
         }
 
-        // FIXME: Check if flip is needed (macos)
-        context.textMatrix = CGAffineTransform(scaleX: 1, y: -1)
-
         for run in glyphRuns {
             run.draw(in: context)
         }
