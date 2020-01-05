@@ -59,7 +59,7 @@ class ViewController: NSViewController {
 
 class PathView: NSView {
     var path: CGPath
-    init(frame: CGRect = .zero, path: CGPath) {
+    init(frame: NSRect = .zero, path: CGPath) {
         self.path = path
         super.init(frame: frame)
     }

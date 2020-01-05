@@ -35,15 +35,35 @@ class ViewController: UIViewController {
             return s
         }()
 
-        let textView = PathTextView(frame: CGRect(origin: CGPoint(x: 50, y: 100),
-                                                  size: CGSize(width: 650, height: 200)),
-                                    text: text, path: path)
+        let frame = CGRect(origin: CGPoint(x: 50, y: 100),
+                           size: CGSize(width: 650, height: 200))
+
+        let textView = PathTextView(frame: frame, text: text, path: path)
 
         textView.layer.borderColor = UIColor.red.cgColor
         textView.layer.borderWidth = 1
         view.addSubview(textView)
+
+        let pathView = PathView(frame: frame, path: path)
+        view.addSubview(pathView)
     }
-
-
 }
 
+class PathView: UIView {
+    var path: CGPath
+    init(frame: CGRect = .zero, path: CGPath) {
+        self.path = path
+        super.init(frame: frame)
+        self.backgroundColor = UIColor.clear
+    }
+
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    override func draw(_ rect: CGRect) {
+        let ctx = UIGraphicsGetCurrentContext()!
+        ctx.addPath(path)
+        ctx.strokePath()
+    }
+}
