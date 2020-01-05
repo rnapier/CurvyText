@@ -9,7 +9,6 @@
 import UIKit
 import SwiftUI
 
-//typealias PlatformFont = UIFont
 typealias PlatformColor = UIColor
 
 @available(iOS 13, *)
