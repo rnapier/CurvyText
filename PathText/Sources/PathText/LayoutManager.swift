@@ -22,6 +22,11 @@ struct PathTextLayoutManager {
         }
     }
 
+    public var typographicBounds: CGRect {
+        // FIXME: ensureLayout? Maybe pre-calculate this?
+        glyphRuns.reduce(.null) { $0.union($1.typographicBounds) }
+    }
+
     mutating func ensureGlyphs() {
         if needsGlyphGeneration { updateGlyphRuns() }
     }

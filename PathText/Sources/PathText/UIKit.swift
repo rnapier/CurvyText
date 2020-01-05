@@ -59,5 +59,10 @@ public class PathTextView: UIView {
         context.textMatrix = CGAffineTransform(scaleX: 1, y: -1)
         layoutManager.draw(in: context)
     }
+
+    public var typographicBounds: CGRect {
+        layoutManager.ensureLayout()
+        return layoutManager.typographicBounds
+    }
 }
 #endif

@@ -53,7 +53,7 @@ class ViewController: UIViewController {
         var tightFrame = frame
         tightFrame.origin.y = 400
         let tightTextView = PathTextView(frame: tightFrame, text: text, path: path)
-        tightTextView.sizeToFit()
+        tightTextView.bounds = tightTextView.typographicBounds
         tightTextView.layer.borderColor = UIColor.red.cgColor
         tightTextView.layer.borderWidth = 1
         view.addSubview(tightTextView)
