@@ -7,6 +7,11 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		FB05B63523C253EB00B01325 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB05B63423C253EB00B01325 /* AppDelegate.swift */; };
+		FB05B63723C253EB00B01325 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB05B63623C253EB00B01325 /* ViewController.swift */; };
+		FB05B63923C253EC00B01325 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FB05B63823C253EC00B01325 /* Assets.xcassets */; };
+		FB05B63C23C253EC00B01325 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = FB05B63A23C253EC00B01325 /* Main.storyboard */; };
+		FB05B64323C2542300B01325 /* PathText in Frameworks */ = {isa = PBXBuildFile; productRef = FB05B64223C2542300B01325 /* PathText */; };
 		FB2C3664239AA4AC002DDB93 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB2C3663239AA4AC002DDB93 /* AppDelegate.swift */; };
 		FB2C3666239AA4AC002DDB93 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB2C3665239AA4AC002DDB93 /* SceneDelegate.swift */; };
 		FB2C3668239AA4AC002DDB93 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB2C3667239AA4AC002DDB93 /* ContentView.swift */; };
@@ -22,10 +27,6 @@
 		FBF07A5523C24B04001E04DD /* Draggable.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB2C367F239C0B0B002DDB93 /* Draggable.swift */; };
 		FBF07A5723C24B31001E04DD /* PathText in Frameworks */ = {isa = PBXBuildFile; productRef = FBF07A5623C24B31001E04DD /* PathText */; };
 		FBF07A5923C24C9A001E04DD /* Draggable.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBF07A5823C24C9A001E04DD /* Draggable.swift */; };
-		FBF07A6123C24E3E001E04DD /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBF07A6023C24E3E001E04DD /* AppDelegate.swift */; };
-		FBF07A6323C24E3E001E04DD /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBF07A6223C24E3E001E04DD /* ViewController.swift */; };
-		FBF07A6523C24E40001E04DD /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FBF07A6423C24E40001E04DD /* Assets.xcassets */; };
-		FBF07A6823C24E40001E04DD /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = FBF07A6623C24E40001E04DD /* Main.storyboard */; };
 		FBF07A8923C24EA1001E04DD /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBF07A8823C24EA1001E04DD /* AppDelegate.swift */; };
 		FBF07A8B23C24EA1001E04DD /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBF07A8A23C24EA1001E04DD /* SceneDelegate.swift */; };
 		FBF07A8D23C24EA1001E04DD /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBF07A8C23C24EA1001E04DD /* ViewController.swift */; };
@@ -36,6 +37,13 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		FB05B63223C253EB00B01325 /* PathTextDemoMac.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PathTextDemoMac.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		FB05B63423C253EB00B01325 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		FB05B63623C253EB00B01325 /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
+		FB05B63823C253EC00B01325 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		FB05B63B23C253EC00B01325 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
+		FB05B63D23C253EC00B01325 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		FB05B63E23C253EC00B01325 /* PathTextDemoMac.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = PathTextDemoMac.entitlements; sourceTree = "<group>"; };
 		FB2C3660239AA4AC002DDB93 /* CurvyText.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CurvyText.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		FB2C3663239AA4AC002DDB93 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		FB2C3665239AA4AC002DDB93 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
@@ -56,13 +64,6 @@
 		FBF07A5023C24A5B001E04DD /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		FBF07A5123C24A5B001E04DD /* CurvyTextMac.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = CurvyTextMac.entitlements; sourceTree = "<group>"; };
 		FBF07A5823C24C9A001E04DD /* Draggable.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Draggable.swift; sourceTree = "<group>"; };
-		FBF07A5E23C24E3E001E04DD /* PathTextDemoMac.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PathTextDemoMac.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		FBF07A6023C24E3E001E04DD /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
-		FBF07A6223C24E3E001E04DD /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
-		FBF07A6423C24E40001E04DD /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		FBF07A6723C24E40001E04DD /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
-		FBF07A6923C24E40001E04DD /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		FBF07A6A23C24E40001E04DD /* PathTextDemoMac.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = PathTextDemoMac.entitlements; sourceTree = "<group>"; };
 		FBF07A8623C24EA1001E04DD /* PathTextDemo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PathTextDemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		FBF07A8823C24EA1001E04DD /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		FBF07A8A23C24EA1001E04DD /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
@@ -74,6 +75,14 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		FB05B62F23C253EB00B01325 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				FB05B64323C2542300B01325 /* PathText in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		FB2C365D239AA4AC002DDB93 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -90,13 +99,6 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		FBF07A5B23C24E3E001E04DD /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		FBF07A8323C24EA1001E04DD /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -108,6 +110,19 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		FB05B63323C253EB00B01325 /* PathTextDemoMac */ = {
+			isa = PBXGroup;
+			children = (
+				FB05B63423C253EB00B01325 /* AppDelegate.swift */,
+				FB05B63623C253EB00B01325 /* ViewController.swift */,
+				FB05B63823C253EC00B01325 /* Assets.xcassets */,
+				FB05B63A23C253EC00B01325 /* Main.storyboard */,
+				FB05B63D23C253EC00B01325 /* Info.plist */,
+				FB05B63E23C253EC00B01325 /* PathTextDemoMac.entitlements */,
+			);
+			path = PathTextDemoMac;
+			sourceTree = "<group>";
+		};
 		FB2C3657239AA4AC002DDB93 = {
 			isa = PBXGroup;
 			children = (
@@ -115,7 +130,7 @@
 				FB2C3662239AA4AC002DDB93 /* CurvyText */,
 				FBF07A4323C24A59001E04DD /* CurvyTextMac */,
 				FBF07A8723C24EA1001E04DD /* PathTextDemo */,
-				FBF07A5F23C24E3E001E04DD /* PathTextDemoMac */,
+				FB05B63323C253EB00B01325 /* PathTextDemoMac */,
 				FB2C3661239AA4AC002DDB93 /* Products */,
 				FB2C367C239C09CE002DDB93 /* Frameworks */,
 			);
@@ -126,8 +141,8 @@
 			children = (
 				FB2C3660239AA4AC002DDB93 /* CurvyText.app */,
 				FBF07A4223C24A59001E04DD /* CurvyTextMac.app */,
-				FBF07A5E23C24E3E001E04DD /* PathTextDemoMac.app */,
 				FBF07A8623C24EA1001E04DD /* PathTextDemo.app */,
+				FB05B63223C253EB00B01325 /* PathTextDemoMac.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -186,19 +201,6 @@
 			path = "Preview Content";
 			sourceTree = "<group>";
 		};
-		FBF07A5F23C24E3E001E04DD /* PathTextDemoMac */ = {
-			isa = PBXGroup;
-			children = (
-				FBF07A6023C24E3E001E04DD /* AppDelegate.swift */,
-				FBF07A6223C24E3E001E04DD /* ViewController.swift */,
-				FBF07A6423C24E40001E04DD /* Assets.xcassets */,
-				FBF07A6623C24E40001E04DD /* Main.storyboard */,
-				FBF07A6923C24E40001E04DD /* Info.plist */,
-				FBF07A6A23C24E40001E04DD /* PathTextDemoMac.entitlements */,
-			);
-			path = PathTextDemoMac;
-			sourceTree = "<group>";
-		};
 		FBF07A8723C24EA1001E04DD /* PathTextDemo */ = {
 			isa = PBXGroup;
 			children = (
@@ -216,6 +218,26 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		FB05B63123C253EB00B01325 /* PathTextDemoMac */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = FB05B63F23C253EC00B01325 /* Build configuration list for PBXNativeTarget "PathTextDemoMac" */;
+			buildPhases = (
+				FB05B62E23C253EB00B01325 /* Sources */,
+				FB05B62F23C253EB00B01325 /* Frameworks */,
+				FB05B63023C253EB00B01325 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = PathTextDemoMac;
+			packageProductDependencies = (
+				FB05B64223C2542300B01325 /* PathText */,
+			);
+			productName = PathTextDemoMac;
+			productReference = FB05B63223C253EB00B01325 /* PathTextDemoMac.app */;
+			productType = "com.apple.product-type.application";
+		};
 		FB2C365F239AA4AC002DDB93 /* CurvyText */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = FB2C3674239AA4AF002DDB93 /* Build configuration list for PBXNativeTarget "CurvyText" */;
@@ -256,23 +278,6 @@
 			productReference = FBF07A4223C24A59001E04DD /* CurvyTextMac.app */;
 			productType = "com.apple.product-type.application";
 		};
-		FBF07A5D23C24E3E001E04DD /* PathTextDemoMac */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = FBF07A6B23C24E40001E04DD /* Build configuration list for PBXNativeTarget "PathTextDemoMac" */;
-			buildPhases = (
-				FBF07A5A23C24E3E001E04DD /* Sources */,
-				FBF07A5B23C24E3E001E04DD /* Frameworks */,
-				FBF07A5C23C24E3E001E04DD /* Resources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-			);
-			name = PathTextDemoMac;
-			productName = PathTextDemoMac;
-			productReference = FBF07A5E23C24E3E001E04DD /* PathTextDemoMac.app */;
-			productType = "com.apple.product-type.application";
-		};
 		FBF07A8523C24EA1001E04DD /* PathTextDemo */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = FBF07A9723C24EA2001E04DD /* Build configuration list for PBXNativeTarget "PathTextDemo" */;
@@ -303,13 +308,13 @@
 				LastUpgradeCheck = 1120;
 				ORGANIZATIONNAME = "Rob Napier";
 				TargetAttributes = {
+					FB05B63123C253EB00B01325 = {
+						CreatedOnToolsVersion = 11.3;
+					};
 					FB2C365F239AA4AC002DDB93 = {
 						CreatedOnToolsVersion = 11.2.1;
 					};
 					FBF07A4123C24A59001E04DD = {
-						CreatedOnToolsVersion = 11.3;
-					};
-					FBF07A5D23C24E3E001E04DD = {
 						CreatedOnToolsVersion = 11.3;
 					};
 					FBF07A8523C24EA1001E04DD = {
@@ -333,12 +338,21 @@
 				FB2C365F239AA4AC002DDB93 /* CurvyText */,
 				FBF07A4123C24A59001E04DD /* CurvyTextMac */,
 				FBF07A8523C24EA1001E04DD /* PathTextDemo */,
-				FBF07A5D23C24E3E001E04DD /* PathTextDemoMac */,
+				FB05B63123C253EB00B01325 /* PathTextDemoMac */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		FB05B63023C253EB00B01325 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				FB05B63923C253EC00B01325 /* Assets.xcassets in Resources */,
+				FB05B63C23C253EC00B01325 /* Main.storyboard in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		FB2C365E239AA4AC002DDB93 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -359,15 +373,6 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		FBF07A5C23C24E3E001E04DD /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				FBF07A6523C24E40001E04DD /* Assets.xcassets in Resources */,
-				FBF07A6823C24E40001E04DD /* Main.storyboard in Resources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		FBF07A8423C24EA1001E04DD /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -381,6 +386,15 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		FB05B62E23C253EB00B01325 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				FB05B63723C253EB00B01325 /* ViewController.swift in Sources */,
+				FB05B63523C253EB00B01325 /* AppDelegate.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		FB2C365C239AA4AC002DDB93 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -402,15 +416,6 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		FBF07A5A23C24E3E001E04DD /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				FBF07A6323C24E3E001E04DD /* ViewController.swift in Sources */,
-				FBF07A6123C24E3E001E04DD /* AppDelegate.swift in Sources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		FBF07A8223C24EA1001E04DD /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -424,6 +429,14 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXVariantGroup section */
+		FB05B63A23C253EC00B01325 /* Main.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				FB05B63B23C253EC00B01325 /* Base */,
+			);
+			name = Main.storyboard;
+			sourceTree = "<group>";
+		};
 		FB2C366E239AA4AF002DDB93 /* LaunchScreen.storyboard */ = {
 			isa = PBXVariantGroup;
 			children = (
@@ -436,14 +449,6 @@
 			isa = PBXVariantGroup;
 			children = (
 				FBF07A4E23C24A5B001E04DD /* Base */,
-			);
-			name = Main.storyboard;
-			sourceTree = "<group>";
-		};
-		FBF07A6623C24E40001E04DD /* Main.storyboard */ = {
-			isa = PBXVariantGroup;
-			children = (
-				FBF07A6723C24E40001E04DD /* Base */,
 			);
 			name = Main.storyboard;
 			sourceTree = "<group>";
@@ -467,6 +472,50 @@
 /* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
+		FB05B64023C253EC00B01325 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = PathTextDemoMac/PathTextDemoMac.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_TEAM = J374TBL6J6;
+				ENABLE_HARDENED_RUNTIME = YES;
+				INFOPLIST_FILE = PathTextDemoMac/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 10.15;
+				PRODUCT_BUNDLE_IDENTIFIER = net.robnapier.PathTextDemoMac;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		FB05B64123C253EC00B01325 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = PathTextDemoMac/PathTextDemoMac.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_TEAM = J374TBL6J6;
+				ENABLE_HARDENED_RUNTIME = YES;
+				INFOPLIST_FILE = PathTextDemoMac/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 10.15;
+				PRODUCT_BUNDLE_IDENTIFIER = net.robnapier.PathTextDemoMac;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
 		FB2C3672239AA4AF002DDB93 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -675,50 +724,6 @@
 			};
 			name = Release;
 		};
-		FBF07A6C23C24E40001E04DD /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CODE_SIGN_ENTITLEMENTS = PathTextDemoMac/PathTextDemoMac.entitlements;
-				CODE_SIGN_STYLE = Automatic;
-				COMBINE_HIDPI_IMAGES = YES;
-				DEVELOPMENT_TEAM = J374TBL6J6;
-				ENABLE_HARDENED_RUNTIME = YES;
-				INFOPLIST_FILE = PathTextDemoMac/Info.plist;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/../Frameworks",
-				);
-				MACOSX_DEPLOYMENT_TARGET = 10.15;
-				PRODUCT_BUNDLE_IDENTIFIER = net.robnapier.PathTextDemoMac;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = macosx;
-				SWIFT_VERSION = 5.0;
-			};
-			name = Debug;
-		};
-		FBF07A6D23C24E40001E04DD /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CODE_SIGN_ENTITLEMENTS = PathTextDemoMac/PathTextDemoMac.entitlements;
-				CODE_SIGN_STYLE = Automatic;
-				COMBINE_HIDPI_IMAGES = YES;
-				DEVELOPMENT_TEAM = J374TBL6J6;
-				ENABLE_HARDENED_RUNTIME = YES;
-				INFOPLIST_FILE = PathTextDemoMac/Info.plist;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/../Frameworks",
-				);
-				MACOSX_DEPLOYMENT_TARGET = 10.15;
-				PRODUCT_BUNDLE_IDENTIFIER = net.robnapier.PathTextDemoMac;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = macosx;
-				SWIFT_VERSION = 5.0;
-			};
-			name = Release;
-		};
 		FBF07A9823C24EA2001E04DD /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -758,6 +763,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		FB05B63F23C253EC00B01325 /* Build configuration list for PBXNativeTarget "PathTextDemoMac" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				FB05B64023C253EC00B01325 /* Debug */,
+				FB05B64123C253EC00B01325 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		FB2C365B239AA4AC002DDB93 /* Build configuration list for PBXProject "CurvyText" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
@@ -785,15 +799,6 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		FBF07A6B23C24E40001E04DD /* Build configuration list for PBXNativeTarget "PathTextDemoMac" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				FBF07A6C23C24E40001E04DD /* Debug */,
-				FBF07A6D23C24E40001E04DD /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
 		FBF07A9723C24EA2001E04DD /* Build configuration list for PBXNativeTarget "PathTextDemo" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
@@ -806,6 +811,10 @@
 /* End XCConfigurationList section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		FB05B64223C2542300B01325 /* PathText */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = PathText;
+		};
 		FB2C367D239C09CE002DDB93 /* PathText */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = PathText;

@@ -41,10 +41,10 @@ public class PathTextView: NSView {
         }
     }
 
-    public init() {
-        super.init(frame: .zero)
-        wantsLayer = true
-        layer?.backgroundColor = .clear
+    public init(frame: CGRect = .zero, text: NSAttributedString = NSAttributedString(), path: CGPath = CGMutablePath()) {
+        super.init(frame: frame)
+        self.text = text
+        self.path = path
     }
 
     required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
