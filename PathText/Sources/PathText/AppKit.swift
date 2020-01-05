@@ -5,7 +5,7 @@
 //  Created by Rob Napier on 1/4/20.
 //
 
-#if canImport(AppKit)
+#if canImport(AppKit) && !targetEnvironment(macCatalyst)
 import AppKit
 import SwiftUI
 
