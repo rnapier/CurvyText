@@ -15,16 +15,6 @@ import UIKit
 import AppKit
 #endif
 
-// Terminology:
-//     t: Value from 0 to 1, where 0 is the starting point, and 1 is the final point.
-//        Note that t=0.5 does *not* mean "half-way through the curve."
-//
-//     linearDistance: 1-D distance along the path
-//
-//     location: a linearDistance from the starting point
-//
-//     distance: 2-D Eucledian distance
-
 private extension Sequence {
     func mapUntilNil<ElementOfResult>(_ transform: (Self.Element) throws -> ElementOfResult?) rethrows -> [ElementOfResult] {
         try map(transform)
@@ -33,33 +23,32 @@ private extension Sequence {
     }
 }
 
-struct TypographicBounds {
-    var width: CGFloat
-    var ascent: CGFloat
-    var descent: CGFloat
-    var height: CGFloat { ascent + descent }
-    var rect: CGRect {
-        CGRect(origin: CGPoint(x: 0, y: ascent), size: CGSize(width: width, height: height))
-    }
+// Location in text space
+struct GlyphLocation {
+    var glyph: CGGlyph
+    var bounds: CGRect
+    var baseline: CGFloat // Distance from bottom of bounds to baseline
 }
 
-extension TypographicBounds {
-    init(run: CTRun, index: Int) {
+extension GlyphLocation {
+    // Location of left (leading?) baseline in text space.
+    var position: CGPoint { CGPoint(x: bounds.minX, y: bounds.maxY - baseline)}
+    var width: CGFloat { bounds.width }
+    var anchor: CGFloat { position.x + width / 2 }  // Point on baseline to connect to tangent
+    var height: CGFloat { bounds.height }
+    var ascent: CGFloat { height - baseline }
+
+    init(run: CTRun, index: CFIndex, glyph: CGGlyph, position: CGPoint) {
         var ascent: CGFloat = 0
         var descent: CGFloat = 0
         let width = CGFloat(CTRunGetTypographicBounds(run,
                                                       CFRange(location: index, length: 1),
                                                       &ascent, &descent, nil))
-        self.init(width: width, ascent: ascent, descent: descent)
-    }
-}
 
-struct GlyphLocation {
-    var glyph: CGGlyph
-    var position: CGPoint
-    var typographicBounds: TypographicBounds
-    var width: CGFloat { typographicBounds.width }
-    var anchor: CGFloat { position.x + width / 2 }
+        self.glyph = glyph
+        self.bounds = CGRect(x: position.x, y: position.y - ascent, width: width, height: ascent + descent)
+        self.baseline = descent
+    }
 }
 
 private func makeCGColor(_ value: Any) -> CGColor {
@@ -154,24 +143,27 @@ struct GlyphRun {
     var locations: [GlyphLocation]
     var tangents: [PathTangent] = []
 
+    var attributes: [NSAttributedString.Key : Any] {
+        CTRunGetAttributes(run) as! [NSAttributedString.Key : Any]
+    }
+
+    var baselineOffset: CGFloat {
+        attributes[.baselineOffset] as? CGFloat ?? 0
+    }
+
     mutating func updatePositions(withTangents tangentGenerator: inout TangentGenerator) {
         tangents = locations.mapUntilNil { tangentGenerator.getTangent(at: $0.anchor) }
     }
 
     var typographicBounds: CGRect {
-        // FIXME: Duplicate
-        let attributes = CTRunGetAttributes(run) as! [NSAttributedString.Key : Any]
-        let baselineOffset = attributes[.baselineOffset] as? CGFloat ?? 0
-
         let transformed: [CGRect] = zip(locations, tangents).map { (arg) in
             let (location, tangent) = arg
 
             let tangentPoint = tangent.point
             let angle = tangent.angle
 
-            return location.typographicBounds.rect
-                .offsetBy(dx: 0, dy:  -2 * location.typographicBounds.ascent)   // Normalize to baseline
-                .offsetBy(dx: -location.width / 2, dy: -(location.position.y + baselineOffset)) // Move anchor to .zero
+            return location.bounds
+                .offsetBy(dx: -location.anchor, dy: -(location.position.y + baselineOffset)) // Move anchor to .zero
                 .applying(.init(rotationAngle: angle))  // Rotate
                 .offsetBy(dx: tangentPoint.x, dy: tangentPoint.y)   // Translate in rotated context
         }
@@ -180,11 +172,10 @@ struct GlyphRun {
     }
 
     func draw(in context: CGContext) {
+//        context.stroke(typographicBounds)
+
         context.saveGState()
         defer { context.restoreGState() }
-
-        let attributes = CTRunGetAttributes(run) as! [NSAttributedString.Key : Any]
-        let baselineOffset = attributes[.baselineOffset] as? CGFloat ?? 0
 
         context.apply(attributes: attributes)
 

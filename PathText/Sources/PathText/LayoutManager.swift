@@ -55,17 +55,13 @@ struct PathTextLayoutManager {
                 initialized = glyphCount
             }
 
-            let bounds: [TypographicBounds] = (0..<glyphCount).map {
-                TypographicBounds(run: run, index: $0)
-            }
-
             let glyphs = Array<CGGlyph>(unsafeUninitializedCapacity: glyphCount) { (buffer, initialized) in
                 CTRunGetGlyphs(run, CFRange(), buffer.baseAddress!)
                 initialized = glyphCount
             }
 
-            let locations = zip(glyphs, zip(positions, bounds))
-                .map { GlyphLocation(glyph: $0, position: $1.0, typographicBounds: $1.1) }
+            let locations: [GlyphLocation] = (0..<glyphCount).map { i in //zip(glyphs, zip(positions, bounds))
+                GlyphLocation(run: run, index: i, glyph: glyphs[i], position: positions[i]) }
                 .sorted { $0.anchor < $1.anchor }
 
             return GlyphRun(run: run, locations: locations)
