@@ -28,11 +28,11 @@ struct PathTextLayoutManager {
     }
 
     mutating func ensureGlyphs() {
-        if needsGlyphGeneration { updateGlyphRuns() }
+        if needsGlyphGeneration { updateGlyphs() }
     }
 
     mutating func ensureLayout() {
-        if needsLayout { updateGlyphPositions() }
+        if needsLayout { updateLayout() }
     }
 
     private var needsGlyphGeneration = false
@@ -43,7 +43,7 @@ struct PathTextLayoutManager {
 
     private var glyphRuns: [GlyphRun] = []
 
-    private mutating func updateGlyphRuns() {
+    private mutating func updateGlyphs() {
         let line = CTLineCreateWithAttributedString(text)
         let runs = CTLineGetGlyphRuns(line) as! [CTRun]
 
@@ -60,22 +60,23 @@ struct PathTextLayoutManager {
                 initialized = glyphCount
             }
 
-            let locations: [GlyphLocation] = (0..<glyphCount).map { i in //zip(glyphs, zip(positions, bounds))
-                GlyphLocation(run: run, index: i, glyph: glyphs[i], position: positions[i]) }
-                .sorted { $0.anchor < $1.anchor }
+            let locations: [GlyphBoxes] = (0..<glyphCount).map { i in
+                GlyphBoxes(run: run, index: i, glyph: glyphs[i], position: positions[i])
+            }
+            .sorted { $0.anchor < $1.anchor }
 
-            return GlyphRun(run: run, locations: locations)
+            return GlyphRun(run: run, boxes: locations)
         }
 
         needsGlyphGeneration = false
     }
 
-    private mutating func updateGlyphPositions() {
+    private mutating func updateLayout() {
         ensureGlyphs()
         var tangents = TangentGenerator(path: path)
         glyphRuns = glyphRuns.map {
             var glyphRun = $0
-            glyphRun.updatePositions(withTangents: &tangents)
+            glyphRun.updateTangets(with: &tangents)
             return glyphRun
         }
 

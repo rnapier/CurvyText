@@ -8,7 +8,7 @@
 import Foundation
 import CoreText
 
-// For NSShaddow
+// For NSShadow
 #if canImport(UIKit)
 import UIKit
 #elseif canImport(AppKit)
@@ -24,13 +24,13 @@ private extension Sequence {
 }
 
 // Location in text space
-struct GlyphLocation {
+struct GlyphBoxes {
     var glyph: CGGlyph
     var bounds: CGRect
     var baseline: CGFloat // Distance from bottom of bounds to baseline
 }
 
-extension GlyphLocation {
+extension GlyphBoxes {
     // Location of left (leading?) baseline in text space.
     var position: CGPoint { CGPoint(x: bounds.minX, y: bounds.maxY - baseline)}
     var width: CGFloat { bounds.width }
@@ -44,7 +44,6 @@ extension GlyphLocation {
         let width = CGFloat(CTRunGetTypographicBounds(run,
                                                       CFRange(location: index, length: 1),
                                                       &ascent, &descent, nil))
-
         self.glyph = glyph
         self.bounds = CGRect(x: position.x, y: position.y - ascent, width: width, height: ascent + descent)
         self.baseline = descent
@@ -89,6 +88,7 @@ private extension CGContext {
                 self.setTextDrawingMode(mode)
                 self.setLineWidth(width)
 
+            // Remember: NSShadow does not honor CTM. It is always in the default user coordinates.
             case .shadow:
                 let shadow = value as! NSShadow
                 if let color = shadow.shadowColor {
@@ -139,24 +139,32 @@ private extension CGContext {
 }
 
 struct GlyphRun {
-    var run: CTRun
-    var locations: [GlyphLocation]
-    var tangents: [PathTangent] = []
+    let run: CTRun
+    let boxes: [GlyphBoxes]
+    let attributes: [NSAttributedString.Key : Any]
 
-    var attributes: [NSAttributedString.Key : Any] {
-        CTRunGetAttributes(run) as! [NSAttributedString.Key : Any]
+    init(run: CTRun, boxes: [GlyphBoxes]) {
+        self.run = run
+        self.boxes = boxes
+        self.attributes = CTRunGetAttributes(run) as! [NSAttributedString.Key : Any]
+    }
+
+    private(set) var tangents: [PathTangent] = [] {
+        didSet {
+            updateTypographicBounds()
+        }
     }
 
     var baselineOffset: CGFloat {
         attributes[.baselineOffset] as? CGFloat ?? 0
     }
 
-    mutating func updatePositions(withTangents tangentGenerator: inout TangentGenerator) {
-        tangents = locations.mapUntilNil { tangentGenerator.getTangent(at: $0.anchor) }
+    mutating func updateTangets(with tangentGenerator: inout TangentGenerator) {
+        tangents = boxes.mapUntilNil { tangentGenerator.getTangent(at: $0.anchor) }
     }
 
-    var typographicBounds: CGRect {
-        let transformed: [CGRect] = zip(locations, tangents).map { (arg) in
+    private mutating func updateTypographicBounds() {
+        let transformed: [CGRect] = zip(boxes, tangents).map { (arg) in
             let (location, tangent) = arg
 
             let tangentPoint = tangent.point
@@ -168,18 +176,21 @@ struct GlyphRun {
                 .offsetBy(dx: tangentPoint.x, dy: tangentPoint.y)   // Translate in rotated context
         }
 
-        return transformed.reduce(.null) { $0.union($1) }
+        typographicBounds = transformed.reduce(.null) { $0.union($1) }
     }
 
+    var typographicBounds: CGRect = .null
+
     func draw(in context: CGContext) {
-//        context.stroke(typographicBounds)
+        // DEBUGGING
+        // context.stroke(typographicBounds)
 
         context.saveGState()
         defer { context.restoreGState() }
 
         context.apply(attributes: attributes)
 
-        for (location, tangent) in zip(locations, tangents) {
+        for (location, tangent) in zip(boxes, tangents) {
             context.saveGState()
             defer { context.restoreGState() }
 
